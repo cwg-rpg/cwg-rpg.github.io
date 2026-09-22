@@ -48,6 +48,7 @@
       ]],
       ['Tier list', [
         'Solo grade weighs survival more, and heroes without Strength pay a little for thinner HP. AFK now means farming alone: half no-click damage, half no-click survival.',
+        'The lifesteal pet box now re-ranks the AFK farm and Solo columns too, not only Tank.',
       ]],
     ]],
   ];
