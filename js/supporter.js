@@ -16,7 +16,7 @@
       <div class="card"><h3>Auras - $10 each</h3><p>+3% damage per aura owned, all 14 add another +28%.</p><p>${link('supporter?tab=auras', '', 'Auras')}</p></div>
       <div class="card"><h3>Pets - $15 each</h3><p>Only the equipped pet gives its bonus, bonuses do not stack. Slot 2 is not for sale yet.</p><p>${link('pets', '', 'Pets')}</p></div>
       <div class="card"><h3>Auto-Pot - $5</h3><p>Your potion fires by itself at 70% HP or lower (20 s cooldown): heals 10% of max HP, 20% from level 100, 30% from level 500.</p></div>
-      <div class="card"><h3>Stat slots</h3><p>4th slot: buy it, or unlock it for free in game. 5th slot $10, or $15 for both.</p></div>
+      <div class="card"><h3>Stat slots - $10 / $15</h3><p>4th slot: buy it, or unlock it for free in game. 5th slot $10, or $15 for both.</p></div>
     </div>
     <p>Permanent EXP / Gold / Drop bonuses are separate purchases: ${link('supporter?tab=tiers', '', 'Supporter tiers')}.</p>`;
   };

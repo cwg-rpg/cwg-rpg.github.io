@@ -60,7 +60,7 @@
     const m = M[id]; if (!m) return '<p>Unknown monster.</p>';
     return `<h2>${esc(m.name)} ${tag(m.kind, 'acc')}</h2>
     ${m.zones.length ? `<h3>Where</h3><ul>${m.zones.map(z => `<li>${zlink(z.zone)} · ${esc(z.kind)}${z.raid ? ' · ' + esc(z.raid) : ''}${z.level ? ` · level ${esc(z.level)}` : ''}${z.hp ? ` · ${fmt(z.hp)} HP` : ''}${z.spawn_count ? ` · ${z.spawn_count} spawn${z.spawn_count > 1 ? 's' : ''}` : ''}${z.respawn_s != null ? ` · respawns after ${z.respawn_s} s` : ''}</li>`).join('')}</ul>` : '<p class="small">Spawned by a trigger, a summon or a dungeon wave rather than a fixed spawn.</p>'}
-    ${m.gold != null ? `<p><b>Kill reward:</b> ${fmt(m.gold)} gold · ${fmt(m.exp)} EXP${m.lumber ? ' · ' + fmt(m.lumber) + ' lumber' : ''} </p>` : ''}
+    ${m.gold != null ? `<p><b>Kill reward:</b> ${fmt(m.gold)} gold · ${fmt(m.exp)} EXP${m.lumber ? ' · ' + fmt(m.lumber) + ' lumber' : ''} </p>` : `<p><b>Kill reward:</b> none</p>`}
     <h3>Drops (${m.drops.length})</h3>${m.drops.length ? `<div class="tbl"><table><tr><th>Item</th><th>Type</th><th class="num">Base chance</th><th class="num">Rolls</th></tr>${[...m.drops].sort((a, b) => b.chance - a.chance).map(d => `<tr><td>${ilink(d.item)}</td><td class="small">${esc((I[d.item] || {}).type || '')}</td><td class="num">${pct(d.chance)}</td><td class="num">${d.rolls}</td></tr>`).join('')}</table></div>` : '<p class="small">No item drops.</p>'}`;
   };
   KL.zone = 'Zone'; KL.monster = 'Monster / boss';
