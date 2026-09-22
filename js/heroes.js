@@ -40,7 +40,7 @@
     const pool = T.heroes.filter(r => !f2p || r.free !== false);
     const max = {}; for (const k of ['boss', 'aoe', 'afk', 'utility', 'tank']) max[k] = Math.max(1, ...pool.map(r => src(r)[k] || 0));
     const norm = (r, k) => (src(r)[k] || 0) / max[k];
-    const solo = r => 0.4 * norm(r, 'boss') + 0.1 * norm(r, 'aoe') + 0.5 * norm(r, 'tank');
+    const solo = r => 0.35 * norm(r, 'boss') + 0.1 * norm(r, 'aoe') + 0.55 * norm(r, 'tank');
     const SAFE = { 'Survives': 1, 'Dies if left alone': 0.4 };
     const afkv = r => norm(r, 'afk');
     const afkMax = Math.max(0.001, ...pool.map(afkv));
