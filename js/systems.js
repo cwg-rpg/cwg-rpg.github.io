@@ -38,7 +38,7 @@
       'Where to farm next: pick your gear once and follow the next step for every slot. Two views, Simple and Detailed. "I have it" moves the slot on and ticks the gear checklist for you.',
       'Gear checklists now run from the first piece to the last enhancement of every slot, with every material and its source in place.',
       'Party dungeons: the Contribution and Permanent Engraving system, every track and the cost of each level.',
-      'Tier list: the Solo grade now weighs survival more, and heroes without Strength pay a little for their thinner HP.',
+      'Tier list: the Solo grade now weighs survival more, and heroes without Strength pay a little for their thinner HP. The AFK column now means farming alone: half no-click damage, half no-click survival.',
     ]],
   ];
   P.changelog = () => `<h2>Changelog</h2>${CHANGES.map(([d, xs]) => `<h3>${esc(d)}</h3><ul>${xs.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`).join('')}`;
