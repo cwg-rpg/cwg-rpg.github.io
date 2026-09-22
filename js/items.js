@@ -5,7 +5,7 @@
   const TYPES = [...new Set(ITEMS.map(i => i.type))].sort();
   const SRC = { drop: 'Monster drop', recipe: 'Recipe', shop: 'Shop', ticket: 'Ticket dungeon', supporter: 'Supporter reward', 'party dungeon': 'Party dungeon reward' };
   const dropCell = i => { const d = [...i.drops].sort((a, b) => b.c - a.c); return d.slice(0, 2).map(x => mlink(x.m) + ' <span class="small">' + pct(x.c) + '</span>').join(', ') + (d.length > 2 ? ' …' : ''); };
-  const TYPE_ORDER = ['Weapon', 'Armor', 'Gloves', 'Accessory', 'Gem', 'Hidden', 'Pet gear', 'Material', 'Consumable', 'Ticket', 'Stat book', 'Companion'];
+  const TYPE_ORDER = ['Weapon', 'Armor', 'Gloves', 'Accessory', 'Gem', 'Hidden', 'Pet gear', 'Aura', 'Material', 'Consumable', 'Ticket', 'Stat book', 'Companion'];
   const TYPES2 = TYPE_ORDER.filter(x => ITEMS.some(i => i.type === x));
   const FAM = {}; for (const i of ITEMS) (FAM[i.family] = FAM[i.family] || []).push(i);
   const famRep = list => list.slice().sort((a, b) => (a.level || 0) - (b.level || 0) || String(a.variant || '').localeCompare(String(b.variant || '')))[0];
@@ -31,11 +31,11 @@
   hooks.push((page, out) => { if (page !== 'items') return; const cb = out.querySelector('#allitems'); if (cb) cb.addEventListener('change', () => { K.filters.all = cb.checked ? '1' : '0'; K.route(); }); });
   hooks.push((page, out) => { if (page !== 'recipes') return; const cb = out.querySelector('#enh'); if (cb) cb.addEventListener('change', () => { K.filters.enh = cb.checked ? '1' : '0'; K.route(); }); });
   P.item = id => {
-    const i = I[id]; if (!i) return '<p>Item not found.</p>'; const dr = [...i.drops].sort((a, b) => b.c - a.c); const mb = madeBy(id), u = usedIn(id);
+    const i = I[id]; if (!i) return '<p>Item not found.</p>'; const dr = [...i.drops].sort((a, b) => b.c - a.c); const mb = madeBy(id); const lvOf = k => (I[k] && I[k].level) || 1; const u = usedIn(id); { const idx = u.map((r, n) => (I[r.out] || {}).family === i.family ? n : -1).filter(n => n >= 0); const same = idx.map(n => u[n]).sort((a, b) => lvOf(a.out) - lvOf(b.out)); idx.forEach((n, k) => { u[n] = same[k]; }); }
     const fam = FAM[i.family].filter(x => x.id !== id).sort((a, b) => (a.level || 0) - (b.level || 0));
     return `<h2>${icon(id)} ${iname(i)} ${tag(i.type, 'acc')}</h2>
     ${(() => { const nx = u[0]; if (!nx) return ''; const mats = nx.in.filter(([k]) => k !== id); const m = mats.map(([k, n]) => { const it = I[k]; const best = it ? [...it.drops].sort((a, b) => b.c - a.c)[0] : null; return (n > 1 ? fmt(n) + '× ' : '') + ilink(k) + (best ? ` <span class="small">from ${mlink(best.m)} ${pct(best.c)}</span>` : ''); }).join(' + '); return `<p><b>Next:</b> ${ilink(nx.out)}${m ? ', needs ' + m : ''}${nx.chance != null ? ` <span class="small">· ${pct(nx.chance_eff != null ? nx.chance_eff : nx.chance)} success</span>` : ''}</p>`; })()}
-    <div class="tip">${tipHtml(i.tip) || '<span class="small">No tooltip</span>'}</div>
+    <div class="tip">${tipHtml(i.tip) || '<span class="small">No tooltip</span>'}</div>${i.note ? `<div class="card hi"><p style="margin:0">${esc(i.note)}</p></div>` : ''}
     ${i.companion ? `<p>Companion: put it in a bag and the bag becomes ${mlink(i.companion)}. See ${link('pets', '', 'Pets')}.</p>` : ''}
     ${i.shop ? `<h3>Sold at</h3><ul>${i.shop.map(s => `<li>${zlink(s.zone)} · ${esc(s.shop)} · ${s.gold ? fmt(s.gold) + ' gold' : ''}${s.lumber ? fmt(s.lumber) + ' lumber' : ''}</li>`).join('')}</ul>` : ''}
     ${dr.length ? `<h3>Drops from</h3><div class="tbl"><table><tr><th>Monster</th><th class="num">Base chance</th><th class="num">Rolls</th><th>Zone</th></tr>${dr.map(x => { const m = M[x.m]; return `<tr><td>${mlink(x.m)}</td><td class="num">${pct(x.c)}</td><td class="num">${x.r}</td><td class="small">${m ? [...new Set(m.zones.map(z => z.zone))].map(zlink).join(', ') : ''}</td></tr>`; }).join('')}</table></div>` : ''}
@@ -52,13 +52,13 @@
   const grow = g => { const r = RBYID[g.first]; const lv = g.levels ? ` <span class="small">${g.levels[0] === g.levels[1] ? '+' + g.levels[0] : '+' + g.levels[0] + ' → +' + g.levels[1]}</span>` : ''; const v = g.variants.length ? ` <span class="small">[${g.variants.join('/')}]</span>` : '';
     const mats = (g.self ? [`${esc(g.family)}${g.levels ? ' one level lower' : ''}`] : []).concat(g.mats.map(([m, n]) => (n > 1 ? fmt(n) + '× ' : '') + gname(m))).join(' + ');
     const ch = g.chance_min == null ? '' : g.chance_min === g.chance_max ? pct(g.chance_min) : `${pct(g.chance_max)} → ${pct(g.chance_min)}`;
-    return `<tr><td>${gname(g.family, g)}${lv}${v}</td><td class="small">${mats}</td><td class="num">${ch}</td><td class="small">${esc(g.kind)}${g.n > 1 ? ` · ${g.n} recipes` : ''}</td></tr>`; };
+    return `<tr><td>${gname(g.family, g)}${lv}${v}</td><td class="small">${mats}</td><td class="num">${ch}</td><td class="small">${esc(g.kind)}${g.note ? `<br>${esc(g.note)}` : ''}${g.n > 1 ? ` · ${g.n} recipes` : ''}</td></tr>`; };
   P.recipes = (_, f) => {
     const types = [...TYPE_ORDER.filter(x => G.some(g => g.type === x)), 'Other'].filter(x => G.some(g => g.type === x)); const t = types.includes(f.type) ? f.type : types[0]; const q = (f.q || '').toLowerCase();
-    const showEnh = f.enh === '1' || !G.some(g => g.type === t && !/^Enhancement/.test(g.kind));
+    const onlyEnh = !G.some(g => g.type === t && !/^Enhancement/.test(g.kind)); const showEnh = f.enh === '1' || onlyEnh;
     const rows = G.filter(g => g.type === t && (showEnh || !/^Enhancement/.test(g.kind)) && (!q || g.family.toLowerCase().includes(q) || g.mats.some(([m]) => String(m).toLowerCase().includes(q)))).sort((a, b) => (a.prog || 99) - (b.prog || 99) || (a.depth || 0) - (b.depth || 0) || a.family.localeCompare(b.family) || (a.levels ? a.levels[0] : 0) - (b.levels ? b.levels[0] : 0));
     return `<h2>Recipes</h2><p class="small">Have the items on your hero or in a carried backpack and type <code>-craft</code>. A failed Enhancement Stone roll costs only the stone. A Perfect Enhancement Stone makes any enhancement 100%.</p>
-    ${subtabs('recipes', 'type', types.map(x => [x, x]), t)}${filterBox('filter by result or material', f.q)}<p class="small"><label><input type="checkbox" id="enh" ${showEnh ? 'checked' : ''}> show +N enhancement steps</label> · ${rows.length} recipes, early to late</p><div class="tbl"><table class="sortable"><tr><th>Result</th><th>Materials</th><th class="num">Success</th><th>Kind</th></tr>${rows.map(grow).join('')}</table></div>`;
+    ${subtabs('recipes', 'type', types.map(x => [x, x]), t)}${filterBox('filter by result or material', f.q)}<p class="small">${onlyEnh ? '' : `<label><input type="checkbox" id="enh" ${showEnh ? 'checked' : ''}> show +N enhancement steps</label>`}${onlyEnh ? '' : ' · '}${rows.length} recipes, early to late</p><div class="tbl"><table class="sortable"><tr><th>Result</th><th>Materials</th><th class="num">Success</th><th>Kind</th></tr>${rows.map(grow).join('')}</table></div>`;
   };
   KL.item = 'Item';
   for (const fam of Object.keys(FAM)) { const list = FAM[fam]; const rep = famRep(list); const lv = list.map(x => x.level).filter(x => x != null); const v = [...new Set(list.map(x => x.variant).filter(Boolean))]; INDEX.push({ k: 'item', id: rep.id, t: fam + (lv.length && Math.max(...lv) > 1 ? ' +1…+' + Math.max(...lv) : '') + (v.length ? ' [' + v.join('/') + ']' : ''), s: rep.type + ' · ' + rep.stats.map(s => s[0] + ' +' + s[1]).join(' '), w: 2 }); }
