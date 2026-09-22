@@ -69,6 +69,7 @@ window.WK = (function () {
       rows.sort((a, b) => { const x = a.children[ci] ? a.children[ci].textContent.trim() : '', y = b.children[ci] ? b.children[ci].textContent.trim() : ''; const nx = num(x), ny = num(y); const r = nx != null && ny != null ? nx - ny : x.localeCompare(y); return dir === 'asc' ? r : -r; });
       rows.forEach(r => tb.appendChild(r)); }); }));
     for (const h of hooks) h(page, out);
+    alignNums(out);
     const view = page + '/' + id; const same = view === lastView; lastView = view;
     if (out.querySelector('input.filter:focus') || same) window.scrollTo(0, y0); else window.scrollTo(0, 0);
     saveLast();
@@ -100,6 +101,18 @@ window.WK = (function () {
   const loadLive = o => { for (const k of PKEYS) lsSet(k, o && o[k] != null ? o[k] : null); };
   const useProfile = (p, id) => { if (id !== p.cur) { p.data[p.cur] = snapLive(); loadLive(p.data[id] || {}); delete p.data[id]; p.cur = id; } saveProfs(p); window.dispatchEvent(new Event('cwgprofile')); };
   let profUi = null; /* null | 'new' | 'ren' | 'del' */
+  /* every column whose body cells are all numbers (or empty) gets right-aligned header and cells, so headers sit over their numbers */
+  const NUMCELL = /^[-+−]?\$?[\d][\d.,]*\s*(%|s|x)?$/;
+  const alignNums = root => root.querySelectorAll('table').forEach(tb => {
+    if (tb.querySelector('[rowspan],[colspan]')) return;
+    const rows = [...tb.rows]; if (rows.length < 2) return; const head = rows[0]; if (!head.querySelector('th')) return;
+    const body = rows.slice(1).filter(r => !r.querySelector('th'));
+    [...head.cells].forEach((th, ci) => {
+      let n = 0, ok = true;
+      for (const r of body) { const c = r.cells[ci]; if (!c) continue; const t = c.textContent.trim(); if (!t || t === '-') continue; if (NUMCELL.test(t)) n++; else { ok = false; break; } }
+      if (ok && n) { th.classList.add('num'); for (const r of body) if (r.cells[ci]) r.cells[ci].classList.add('num'); }
+    });
+  });
   const statBar = (name, hint) => { let s = 'STR', hid = false; try { s = localStorage.getItem('cwgStat') || 'STR'; hid = localStorage.getItem('cwgStatBar') === 'off'; } catch (e) { }
     if (hid) return `<p class="small sb-min">Main stat: <b class="sb-${s.toLowerCase()}-t">${s}</b> · <a href="#" data-statbar="on">Change</a></p>`;
     return `<div class="statbar"><span class="sb-l">Your main stat</span><span class="sb-seg" role="radiogroup" aria-label="Your main stat">${['STR', 'AGI', 'INT'].map(x => `<label class="sb-${x.toLowerCase()}${x === s ? ' on' : ''}"><input type="radio" name="${name}" value="${x}" ${x === s ? 'checked' : ''}>${x}</label>`).join('')}</span><span class="sb-h">${hint}</span><a href="#" data-statbar="off" class="small sb-hide">Hide</a></div>`; };

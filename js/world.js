@@ -7,7 +7,7 @@
     const H = (W.heroes || []).length, T = (W.tierlist && W.tierlist.heroes || []).length;
     const card = (h, txt, sub) => `<a class="card home" href="#${h}"><h3>${txt}</h3><p class="small">${sub}</p></a>`;
     return `<div class="card hi"><p style="margin:0"><img src="img_map.png" alt="" style="width:40px;height:40px;vertical-align:middle;margin-right:8px;border-radius:6px"><b>New?</b> Start with the ${link('guides', 'early-game', 'Early game guide')}.</p></div>
-    <div class="card hi"><p style="margin:0"><span style="display:inline-block;width:40px;height:40px;vertical-align:middle;margin-right:8px;border-radius:6px;background:var(--accent-soft);color:var(--accent);text-align:center;line-height:40px;font-size:22px">➜</span><b>Past the start?</b> ${link('planner', '', 'Where to farm next')} - pick your gear once, then follow the next step for every slot.</p></div>
+    <div class="card hi"><p style="margin:0"><span style="display:inline-block;width:40px;height:40px;vertical-align:middle;margin-right:8px;border-radius:6px;background:var(--accent-soft);color:var(--accent);text-align:center;line-height:40px;font-size:22px">➜</span><b>Past the start?</b> ${link('planner', '', 'Where to farm next')} - pick your gear once, then follow each slot's next step.</p></div>
     <p><a class="discord" href="https://discord.gg/Z5Pf8exufw" target="_blank" rel="noopener">Join the CWG RPG Discord</a> <span class="small">- community and updates</span></p>
     <div class="grid">
       ${card('zones', 'Zones', `${W.zones.length} areas in order, with entry requirements, bosses and shops`)}
@@ -15,7 +15,7 @@
       ${card('items', 'Items', `${Object.keys(I).length.toLocaleString()} items by zone or by type, with stats, sources and recipes`)}
       ${card('recipes', 'Recipes', `${(W.recipe_groups || []).length} crafting recipes and enhancement chains`)}
       ${card('heroes', 'Heroes', `${[...new Set((W.heroes || []).map(h => h.lineage))].length} heroes, tier 1 and tier 2 abilities`)}
-      ${card('tierlist', 'Tier list', 'Solo, boss, AoE, AFK, utility and tank grades, free-to-play, tier 1 and lifesteal-pet views')}
+      ${card('tierlist', 'Tier list', 'Solo, boss, AoE, AFK, utility and survival grades, free-to-play, tier 1 and lifesteal-pet views')}
       ${card('guides', 'Guides', 'Early game route and gear progression per slot, with checklists')}
       ${card('systems', 'Game systems', 'Potions, stat shops, awakening, slots, attributes, party dungeons, potential, sailing, relics, Dimension Link')}
       ${card('supporter', 'Supporter', 'What the supporter menu sells and what each reward does')}
@@ -24,7 +24,7 @@
       ${card('commands', 'Commands', 'Every chat command, one line each')}
     </div>`;
   };
-  P.zones = () => `<h2>Zones</h2><p class="small">${W.zones.length} areas in progression order. Each zone page lists its monsters, bosses, dungeons and shops.</p>
+  P.zones = () => `<h2>Zones</h2><p class="small">${W.zones.length} areas in the order you reach them. Each page lists monsters, bosses, dungeons and shops.</p>
   <div class="grid">${REALMS.map(r => `<div class="card"><h3>${esc(r)}</h3><ol>${W.zones.filter(z => z.realm === r).map(z => `<li value="${z.order}">${link('zone', z.id, z.name)}<br><span class="small">${esc(z.entry)}</span></li>`).join('')}</ol></div>`).join('')}</div>
   ${zm.stat_shop_caps ? `<details><summary>Stat purchase caps</summary><div class="tbl"><table><tr><th>Shops</th><th class="num">Base stat cap</th></tr>${zm.stat_shop_caps.map(c => `<tr><td>${esc(c.shops)}</td><td class="num">${fmt(c.cap)}</td></tr>`).join('')}</table></div></details>` : ''}`;
   const mrow = e => { const m = M[e.id]; return `<tr><td>${mlink(e.id)}</td><td class="num">${esc(e.level || '')}</td><td class="num">${fmt(e.hp)}</td><td class="num">${e.spawn_count || ''}</td><td class="num">${e.respawn_s != null ? e.respawn_s + ' s' : ''}</td><td class="num">${m && m.gold != null ? fmt(m.gold) : ''}</td><td class="small">${m ? [...m.drops].sort((a, b) => b.chance - a.chance).slice(0, 5).map(d => ilink(d.item) + ' ' + pct(d.chance)).join(' · ') + (m.drops.length > 5 ? ` · +${m.drops.length - 5}` : '') : ''}</td></tr>`; };
@@ -47,7 +47,7 @@
     <div class="tbl"><table class="sortable"><tr><th>Monster</th><th>Kind</th><th class="num">Lv</th><th class="num">HP</th><th class="num">Gold</th><th>Best drops</th></tr>${list.map(({ m, z }) => `<tr><td>${mlink(m.id)}</td><td class="small">${esc(z.kind)}${z.raid ? ' · ' + esc(z.raid) : ''}</td><td class="num">${esc(z.level || '')}</td><td class="num">${fmt(z.hp)}</td><td class="num">${fmt(m.gold)}</td><td class="small">${[...m.drops].sort((a, b) => b.chance - a.chance).slice(0, 3).map(d => ilink(d.item) + ' ' + pct(d.chance)).join(' · ')}${m.drops.length > 3 ? ` · +${m.drops.length - 3}` : ''}</td></tr>`).join('')}</table></div></div>`; }).join('');
   P.monsters = (_, f) => {
     const view = f.view === 'all' ? 'all' : 'zone';
-    const head = `<h2>Monsters</h2><p class="small">Drop chances are base values, drops land on the ground for anyone. Gold and EXP are per kill.</p>${subtabs('monsters', 'view', [['zone', 'By zone'], ['all', 'One table']], view)}`;
+    const head = `<h2>Monsters</h2><p class="small">Drop chances are base values. Drops land on the ground for anyone to pick up. Gold and EXP are per kill.</p>${subtabs('monsters', 'view', [['zone', 'By zone'], ['all', 'One table']], view)}`;
     if (view === 'zone') { const realm = REALMS.includes(f.realm) ? f.realm : REALMS[0]; return head + subtabs('monsters', 'realm', REALMS.map(r => [r, r]), realm) + monsByZone(realm); }
     const q = (f.q || '').toLowerCase(), k = f.kind || '';
     const zo = m => m.zones.length ? Math.min(...m.zones.map(z => Z[z.zone] ? Z[z.zone].order : 99)) : 99; const lv = m => { const l = m.zones.map(z => parseInt(z.level)).filter(x => !isNaN(x)); return l.length ? Math.max(...l) : null; };
@@ -59,7 +59,7 @@
   P.monster = id => {
     const m = M[id]; if (!m) return '<p>Unknown monster.</p>';
     return `<h2>${esc(m.name)} ${tag(m.kind, 'acc')}</h2>
-    ${m.zones.length ? `<h3>Where</h3><ul>${m.zones.map(z => `<li>${zlink(z.zone)} · ${esc(z.kind)}${z.raid ? ' · ' + esc(z.raid) : ''}${z.level ? ` · level ${esc(z.level)}` : ''}${z.hp ? ` · ${fmt(z.hp)} HP` : ''}${z.spawn_count ? ` · ${z.spawn_count} spawn${z.spawn_count > 1 ? 's' : ''}` : ''}${z.respawn_s != null ? ` · respawns after ${z.respawn_s} s` : ''}</li>`).join('')}</ul>` : '<p class="small">Spawned by a trigger, a summon or a dungeon wave rather than a fixed spawn.</p>'}
+    ${m.zones.length ? `<h3>Where</h3><ul>${m.zones.map(z => `<li>${zlink(z.zone)} · ${esc(z.kind)}${z.raid ? ' · ' + esc(z.raid) : ''}${z.level ? ` · level ${esc(z.level)}` : ''}${z.hp ? ` · ${fmt(z.hp)} HP` : ''}${z.spawn_count ? ` · ${z.spawn_count} spawn${z.spawn_count > 1 ? 's' : ''}` : ''}${z.respawn_s != null ? ` · respawns after ${z.respawn_s} s` : ''}</li>`).join('')}</ul>` : '<p class="small">No fixed spawn. It comes from a summon, a dungeon wave or another in-game event.</p>'}
     ${m.gold != null ? `<p><b>Kill reward:</b> ${fmt(m.gold)} gold · ${fmt(m.exp)} EXP${m.lumber ? ' · ' + fmt(m.lumber) + ' lumber' : ''} </p>` : `<p><b>Kill reward:</b> none</p>`}
     <h3>Drops (${m.drops.length})</h3>${m.drops.length ? `<div class="tbl"><table><tr><th>Item</th><th>Type</th><th class="num">Base chance</th><th class="num">Rolls</th></tr>${[...m.drops].sort((a, b) => b.chance - a.chance).map(d => `<tr><td>${ilink(d.item)}</td><td class="small">${esc((I[d.item] || {}).type || '')}</td><td class="num">${pct(d.chance)}</td><td class="num">${d.rolls}</td></tr>`).join('')}</table></div>` : '<p class="small">No item drops.</p>'}`;
   };
