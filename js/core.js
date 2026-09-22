@@ -7,7 +7,6 @@ window.WK = (function () {
   const fmt = n => { if (n == null || n === '') return ''; const v = Number(n); if (!isFinite(v)) return String(n); let d = 3; if (v !== 0 && Math.abs(v) < 0.001) d = Math.min(12, Math.ceil(-Math.log10(Math.abs(v))) + 2); return v.toLocaleString(undefined, { maximumFractionDigits: d }); };
   const pct = c => c == null ? '' : (c >= 1 ? fmt(c) : Number(c).toPrecision(2).replace(/\.?0+$/, '')) + '%';
   const tag = (t, cls) => `<span class="tag ${cls || ''}">${esc(t)}</span>`;
-  const SITE = tag('community source', 'warn');
 
   /* ---- items ---- */
   const I = W.items, M = W.monsters, R = W.recipes, Z = {}; for (const z of W.zones) Z[z.id] = z;
@@ -20,14 +19,12 @@ window.WK = (function () {
   const usedIn = id => R.filter(r => r.in.some(([k]) => k === id));
   const mlink = id => { const m = M[id]; return m ? link('monster', id, m.name) : esc((W.units || {})[id] || id); };
   const zlink = id => { const z = Z[id]; return z ? link('zone', id, z.name) + ` <span class="small">(${esc(z.realm)})</span>` : esc(id || ''); };
-  const droppers = id => Object.values(M).flatMap(m => m.drops.filter(d => d.item === id).map(d => ({ m, d })));
 
   /* ---- recipes ---- */
   const rrow = r => `<tr><td>${ilink(r.out)}</td><td class="small">${r.in.map(([k, n]) => (n > 1 ? fmt(n) + '× ' : '') + ilink(k)).join(' + ')}</td><td class="num">${(r.chance_eff != null ? r.chance_eff : r.chance) != null ? pct(r.chance_eff != null ? r.chance_eff : r.chance) : ''}</td><td class="small">${esc(r.kind)}</td></tr>`;
   const rtable = rs => rs.length ? `<div class="tbl"><table><tr><th>Result</th><th>Materials</th><th class="num">Success</th><th>Kind</th></tr>${rs.map(rrow).join('')}</table></div>` : '';
 
   /* ---- generic renderer for findings prose (dict/list/string) ---- */
-  const cite = s => esc(s);
   function gen(v, depth) {
     depth = depth || 0;
     if (v == null) return '';
@@ -92,5 +89,5 @@ window.WK = (function () {
   const sim = (a, b) => { const x = bigrams(a), y = bigrams(b); let n = 0; for (const g of x) if (y.has(g)) n++; return 2 * n / (x.size + y.size); };
   const tbl = (rows, h) => `<div class="tbl"><table class="sortable"><tr>${h.map(x => `<th>${x}</th>`).join('')}</tr>${rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>`;
   const GEAR_TYPES = new Set(['Weapon', 'Armor', 'Gloves', 'Accessory', 'Gem', 'Hidden', 'Pet gear']);
-  return { GEAR_TYPES, W, I, M, R, Z, $, esc, link, fmt, pct, tag, SITE, icon, iname, ilink, statLine, tipHtml, madeBy, usedIn, mlink, zlink, droppers, rrow, rtable, gen, cite, INDEX, KL, P, filters, hooks, route, start, subtabs, filterBox, tbl };
+  return { GEAR_TYPES, W, I, M, R, Z, $, esc, link, fmt, pct, tag, icon, iname, ilink, statLine, tipHtml, madeBy, usedIn, mlink, zlink, rrow, rtable, gen, INDEX, KL, P, filters, hooks, route, start, subtabs, filterBox, tbl };
 })();

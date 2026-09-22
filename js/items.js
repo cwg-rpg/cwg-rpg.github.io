@@ -1,6 +1,6 @@
 /* Items list + item page, Recipes tab - items from the map's object data, drops/recipes from the 1.1.0 script */
 (function (K) {
-  const { W, I, M, R, esc, link, tag, icon, iname, ilink, statLine, tipHtml, madeBy, usedIn, mlink, zlink, pct, fmt, rtable, gen, cite, SITE, P, INDEX, KL, subtabs, filterBox, hooks } = K;
+  const { W, I, M, R, esc, link, tag, icon, iname, ilink, statLine, tipHtml, madeBy, usedIn, mlink, zlink, pct, fmt, rtable, gen, P, INDEX, KL, subtabs, filterBox, hooks } = K;
   const ITEMS = Object.values(I);
   const TYPES = [...new Set(ITEMS.map(i => i.type))].sort();
   const SRC = { drop: 'Monster drop', recipe: 'Recipe', shop: 'Shop', ticket: 'Ticket dungeon', supporter: 'Supporter reward', 'party dungeon': 'Party dungeon reward' };
@@ -10,7 +10,7 @@
   const FAM = {}; for (const i of ITEMS) (FAM[i.family] = FAM[i.family] || []).push(i);
   const famRep = list => list.slice().sort((a, b) => (a.level || 0) - (b.level || 0) || String(a.variant || '').localeCompare(String(b.variant || '')))[0];
   const famLink = i => `<a href="#item/${i.id}">${icon(i.id)}<span style="${i.color ? 'color:' + i.color : ''}">${esc(i.family)}</span></a>`;
-  const famLabel = list => { const lv = list.map(x => x.level).filter(x => x != null); const v = [...new Set(list.map(x => x.variant).filter(Boolean))]; return (lv.length ? ` <span class="small">+${Math.min(...lv)} to +${Math.max(...lv)}</span>` : '') + (v.length ? ` <span class="small">[${v.join('/')}]</span>` : ''); };
+  const famLabel = list => { const lv = list.map(x => x.level).filter(x => x != null); const v = [...new Set(list.map(x => x.variant).filter(Boolean))]; return (lv.length ? ` <span class="small">+${Math.min(...lv)} to +${Math.max(...lv)}</span>` : '') + (v.length ? ` <span class="small">[${esc(v.join('/'))}]</span>` : ''); };
   const REALMS = [...new Set(W.zones.map(z => z.realm))]; const ZZ = {}; for (const z of W.zones) ZZ[z.id] = z;
   const zoneOf = mid => { const m = M[mid]; if (!m || !m.zones.length) return null; return m.zones.map(z => z.zone).sort((a, b) => (ZZ[a] ? ZZ[a].order : 99) - (ZZ[b] ? ZZ[b].order : 99))[0]; };
   const BYZONE = {}; for (const i of ITEMS) { const zs = new Set(); for (const d of i.drops) { const z = zoneOf(d.m); if (z) zs.add(z); } for (const s of (i.shop || [])) if (s.zone) zs.add(s.zone); for (const z of zs) (BYZONE[z] = BYZONE[z] || []).push(i); }
