@@ -30,50 +30,53 @@
     const stepsHtml = (steps, key) => g.plain ? `<table class="steps plain">${(steps || []).map(st => `<tr>${st.h ? `<td class="small"><b>${esc(st.h)}</b></td>` : ''}<td${st.h ? '' : ' colspan="2"'}>${rich(st.t)}</td></tr>`).join('')}</table>` : (() => { let zone = null, n = 0; const numbered = g.id === 'gear'; const ownedDone = (steps || []).map(st => { const res = results(st.t); return g.id !== 'early-game' && res.length && res.every(x => owned[x]); }); let lastOwned = -1; ownedDone.forEach((v, i) => { if (v) lastOwned = i; }); return `<table class="steps${numbered ? ' route' : ''}">${(steps || []).map((st, i) => { const k = key + ':' + i; const res = results(st.t); const isDone = done[k] || i <= lastOwned; let head = ''; if (numbered && st.h !== zone && !/^Step /.test(st.h)) { zone = st.h; head = `<tr class="zh"><td colspan="4">${esc(zone)}</td></tr>`; } n++; const parts = numbered && st.t.includes('->') ? [st.t.slice(0, st.t.lastIndexOf('->')).trim(), st.t.slice(st.t.lastIndexOf('->') + 2).trim()] : null; return head + `<tr class="${isDone ? 'done' : ''}"><td><input type="checkbox" class="gstep" data-k="${k}" data-res="${res.join(',')}" ${isDone ? 'checked' : ''}></td>${numbered ? `<td class="small num">${n}</td><td>${parts ? rich(parts[0]) : rich(st.t)}</td><td>${parts ? '→ ' + rich(parts[1]) : ''}</td>` : `<td class="small"><b>${esc(st.h)}</b></td><td>${rich(st.t)}</td>`}</tr>`; }).join('')}</table>`; })();
     const secs = g.sections || [{ h: 'Steps', steps: g.steps }]; const cur = secs.some(s => s.h === f.gsec) && g.id === f.gid ? f.gsec : secs[0].h; f.gid = g.id;
     const si = secs.findIndex(s => s.h === cur);
-    return `<h2>Guides</h2>${K.profileBar()}<div class="sub-tabs">${G.map(x => `<a href="#guides/${x.id}" class="${x.id === g.id ? 'on' : ''}">${esc(x.title)}</a>`).join('')}</div>${g.intro ? `<p class="small">${rich(g.intro)}</p>` : ''}${g.plain ? '' : `${K.statBar('stat', 'Every item switches to this version')}<p><span class="small">☑ Tick a step when done. Everything above it gets ticked too, and unticking clears everything below. Early-game ticks also mark the same items in the gear guide. Saved in this browser only</span></p>`}${secs.length > 1 ? subtabs('guides/' + g.id, 'gsec', secs.map(s => [s.h, s.h]), cur) : ''}<div class="card"><h3>${esc(g.title)}${secs.length > 1 ? ' · ' + esc(cur) : ''}</h3>${secs[si].table ? `<div class="tbl"><table><tr>${secs[si].table.columns.map(c => `<th>${esc(c)}</th>`).join('')}</tr>${secs[si].table.rows.map(r => `<tr>${r.map((c, ci) => `<td class="${ci === 0 ? 'num' : ci === 1 ? '' : 'small'}">${ci === 1 ? `<b>${esc(c)}</b>` : esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>` : stepsHtml(secs[si].steps, g.id + ':' + si)}</div>`;
+    return `<h2>Guides</h2>${K.profileBar()}<div class="sub-tabs">${G.map(x => `<a href="#guides/${x.id}" class="${x.id === g.id ? 'on' : ''}">${esc(x.title)}</a>`).join('')}</div>${g.intro ? `<p class="small">${rich(g.intro)}</p>` : ''}${g.plain ? '' : `${K.statBar('stat', 'Items switch to this version')}<p><span class="small">☑ Tick steps as you go. A tick fills in everything above, an untick clears everything below. Early-game ticks carry over to the gear guide. Saved in this browser only</span></p>`}${secs.length > 1 ? subtabs('guides/' + g.id, 'gsec', secs.map(s => [s.h, s.h]), cur) : ''}<div class="card"><h3>${esc(g.title)}${secs.length > 1 ? ' · ' + esc(cur) : ''}</h3>${secs[si].table ? `<div class="tbl"><table><tr>${secs[si].table.columns.map(c => `<th>${esc(c)}</th>`).join('')}</tr>${secs[si].table.rows.map(r => `<tr>${r.map((c, ci) => `<td class="${ci === 0 ? 'num' : ci === 1 ? '' : 'small'}">${ci === 1 ? `<b>${esc(c)}</b>` : esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>` : stepsHtml(secs[si].steps, g.id + ':' + si)}</div>`;
   };
   const CHANGES = [
     ['23 Sep 2026', [
-      ['Whole wiki', [
-        'Every tab reworded: shorter, plainer text with nothing left out. Tier-list notes rechecked against the current scores.',
-        'Relics: the effect table again shows how often Battle Stone and Luck Stone fire, that Swiftness is a full evade, and that Lucky Token gives 1 extra fragment.',
-        'Tables: numbers now line up under their headers.',
+      ['Heroes', [
+        'Brand-new hero pages: a summary card with rank chips, then Tier 2, Tier 1 and How it\'s scored tabs. No more endless scrolling.',
+        'Every ability now shows its in-game icon in a compact list. Tap one for the full tooltip.',
       ]],
       ['Tier list', [
-        'Utility reworked: party protection counts most, then damage buffs and armor shred, then attack speed, then healing. A hero\'s party healing together counts up to 10% of max HP per second.',
-        'Knockbacks, pulls and stuns no longer count toward Utility or the Debuffer tag. A taunt counts high, and always-on party regeneration auras count on their own.',
-        'Tier 1 view: the Healer tag needs 3% of max HP per second of party healing, since early numbers are smaller.',
-        'Every hero note, survival line and role line rewritten, short and to the point.',
-        'The Tank column is now called Survival and measures survival only. The taunt no longer adds to it and counts in Utility instead. Tank stays as a role tag.',
-        'Only-hero bonus: +10 in Utility for being the sole source of a strong effect. Movement speed never counts.',
+        'Smarter Utility: party protection counts most, then damage buffs and armor shred, then attack speed, then healing. Nature\'s taunt finally gets its due.',
+        'The Tank column is now Survival, a pure measure of how long a hero stays alive. Tank is now the role of the one taunter, Nature, and the other sturdy heroes are Offtanks.',
+        'Fresh hand-written notes, survival lines and role lines for all 26 heroes.',
+        'Cleaner tags: knockbacks, pulls and stuns no longer count as debuffs, and "Only hero with" chips highlight what makes a hero unique.',
+      ]],
+      ['Pets', [
+        'Pets tab rebuilt from scratch: in-game icons, Hero bonus and While summoned side by side, evolved and full-set values in every row.',
+        'Lumipaca got a portrait worthy of its legend.',
+      ]],
+      ['Whole wiki', [
+        'Two full wording passes over every tab: shorter, clearer, written like a player would say it, with nothing left out.',
+        'All 1,049 item icons now come straight from the map, fixing a batch of wrong ones.',
+        'Tables line up properly, and the Relics, Sailing, Dimension Link and Party dungeon pages got missing details back.',
       ]],
     ]],
     ['22 Sep 2026', [
       ['Planner', [
-        'New "Where to farm next" page: pick what you wear, then follow one next step per slot. Detailed view by default, Simple for a quick glance.',
-        'The Next card holds the button, with a "Where to farm now" panel under it: each part, the monster to kill, about how many kills, and a tick for parts you already have. The panel can be hidden.',
-        'Profiles: keep separate gear, main stat and checklist progress for each character you play. The planner and the checklists share them.',
-        'Main stat is now a clear STR / AGI / INT switch at the top of the planner and the checklists. It can be hidden once set.',
-        'Fixed: with AGI or INT picked, the weapon and accessory routes jumped to a different item line where two items share a name.',
+        'New "Where to farm next" page: pick what you wear and get one clear next step per slot, with exactly which monster to farm and about how many kills it takes.',
+        'Profiles keep separate gear, main stat and checklist progress for every character you play.',
+        'A clear STR / AGI / INT switch sits on top of the planner and the checklists, and hides once set.',
       ]],
       ['Guides', [
-        'Gear checklists run from the first piece to the last enhancement of every slot, with every material and where it comes from.',
+        'Complete gear checklists for every slot, from the first piece to the last enhancement, with every material and where it drops.',
       ]],
       ['Game systems', [
-        'Party dungeons: the Contribution and Permanent Engraving system, every track and the cost of each level.',
+        'Party dungeons now cover Contribution and Permanent Engraving: every track and the cost of each level.',
       ]],
       ['Calculators', [
-        'New: roll odds for Ability, Potential and Sailing slots, Engraving cost with the party dungeon clears it takes, and Relic enhancement.',
+        'New calculators: roll odds for Ability, Potential and Sailing slots, Engraving cost in party dungeon clears, and Relic enhancement.',
       ]],
       ['Tier list', [
-        'Reworked: heroes are scored on real free gear and bought stats at three stages (Early, Mid, Late), survival is measured against the map\'s own bosses and monster packs, and basic attacks count.',
-        'Tank now weighs the size of hit a hero survives over its healing, so Strength heroes with big HP pools rank as the real tanks. Solo needs both survival and damage.',
-        'Nature\'s taunt makes it the top tank. Healer now means real party healing. The lifesteal pet choice covers Kain and evolved Kain and re-ranks every column.',
+        'Rebuilt from the ground up: real free gear and bought stats at Early, Mid and Late stages, survival tested against the map\'s own bosses and monster packs.',
+        'Solo now needs both survival and damage, Healer means real party healing, and a lifesteal pet option re-ranks every column.',
       ]],
     ]],
   ];
   P.changelog = () => `<h2>Changelog</h2>${CHANGES.map(([d, cats]) => `<h3>${esc(d)}</h3>${cats.map(([c, xs]) => `<h4>${esc(c)}</h4><ul>${xs.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`).join('')}`).join('')}`;
-  P.credits = () => `<h2>Credits</h2><ul><li>CWG RPG - Covenant of Warring Gods 1.1.0 by TheMidLane / Gwelawyr's RPG Ports. Discord: <a href="https://discord.gg/Z5Pf8exufw" target="_blank" rel="noopener">discord.gg/Z5Pf8exufw</a>.</li><li>Every number here comes from the map's own data.</li><li>Early-game route based on Stoner's guide. Hero portraits from the community wiki, item icons from the community 3.81 planner.</li><li>Gear planner based on Gwelawyr's planner.</li><li>Built with Anthropic's Claude. The tier list is math, not in-game testing.</li></ul>`;
+  P.credits = () => `<h2>Credits</h2><ul><li>CWG RPG - Covenant of Warring Gods 1.1.0 by TheMidLane / Gwelawyr's RPG Ports. Discord: <a href="https://discord.gg/Z5Pf8exufw" target="_blank" rel="noopener">discord.gg/Z5Pf8exufw</a>.</li><li>All numbers come straight from the map's data.</li><li>Early-game route based on Stoner's guide. Hero portraits from the community wiki, item icons from the community 3.81 planner.</li><li>Gear planner based on Gwelawyr's planner.</li><li>Built with Anthropic's Claude. The tier list is math, not in-game testing.</li></ul>`;
   K.hooks.push((page, out) => { if (page !== 'guides') return; out.querySelectorAll('input[name=stat]').forEach(r => r.addEventListener('change', () => { try { localStorage.setItem('cwgStat', r.value); } catch (e) { } K.route(); })); out.querySelectorAll('input.gstep').forEach(cb => cb.addEventListener('change', () => { let d = {}; try { d = JSON.parse(localStorage.getItem('cwgGuideDone') || '{}') || {}; } catch (e) { } let o = {}; try { o = JSON.parse(localStorage.getItem('cwgOwned') || '{}') || {}; } catch (e) { } const all = [...out.querySelectorAll('input.gstep')]; const targets = cb.checked ? all.slice(0, all.indexOf(cb) + 1) : all.slice(all.indexOf(cb)); for (const c of targets) { c.checked = cb.checked; if (cb.checked) d[c.dataset.k] = 1; else delete d[c.dataset.k]; { const early = out.querySelector('.sub-tabs a.on') && /early-game/.test(out.querySelector('.sub-tabs a.on').getAttribute('href') || ''); for (const id of (c.dataset.res || '').split(',').filter(Boolean)) { if (!early && !K.GEAR_TYPES.has((K.I[id] || {}).type)) continue; if (cb.checked) o[id] = 1; else delete o[id]; } } c.closest('tr').classList.toggle('done', cb.checked); } try { localStorage.setItem('cwgGuideDone', JSON.stringify(d)); localStorage.setItem('cwgOwned', JSON.stringify(o)); } catch (e) { } })); });
   KL.guides = 'Guide'; for (const k of KEYS) KL['systems?sys=' + k] = 'Game system';
   for (const g of (W.guides || [])) INDEX.push({ k: 'guides', id: g.id, t: g.title, s: 'guide · ' + (g.intro || '').slice(0, 80), w: 4 });

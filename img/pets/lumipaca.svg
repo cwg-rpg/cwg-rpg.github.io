@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#ffe9a8"/><stop offset="1" stop-color="#f29fce"/></radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="10" fill="url(#bg)"/>
+  <!-- neck + fluffy head -->
+  <path d="M22 64 C22 48 24 40 24 34 L40 34 C40 40 42 48 42 64 Z" fill="#fffaf0" stroke="#6b4a2b" stroke-width="1.2"/>
+  <g fill="#fffaf0" stroke="#6b4a2b" stroke-width="1.2">
+    <ellipse cx="32" cy="27" rx="15" ry="14"/>
+    <circle cx="22" cy="14" r="5"/><circle cx="29" cy="11" r="5.5"/><circle cx="36" cy="11" r="5.5"/><circle cx="43" cy="14" r="5"/>
+  </g>
+  <!-- ears -->
+  <path d="M18 16 L13 5 L22 12 Z M46 16 L51 5 L42 12 Z" fill="#fffaf0" stroke="#6b4a2b" stroke-width="1.2"/>
+  <!-- googly eyes, one looking away -->
+  <circle cx="25" cy="25" r="6" fill="#fff" stroke="#222" stroke-width="1.2"/><circle cx="27.5" cy="27.5" r="2.6" fill="#111"/>
+  <circle cx="39" cy="24" r="7" fill="#fff" stroke="#222" stroke-width="1.2"/><circle cx="36" cy="20.5" r="3" fill="#111"/>
+  <!-- snout with buck teeth and tongue out -->
+  <ellipse cx="32" cy="37" rx="9" ry="6.5" fill="#f3dcc0" stroke="#6b4a2b" stroke-width="1.2"/>
+  <path d="M28 35 Q32 37 36 35" fill="none" stroke="#6b4a2b" stroke-width="1.2"/>
+  <rect x="29.6" y="38" width="2.3" height="3.4" rx=".6" fill="#fff" stroke="#6b4a2b" stroke-width=".8"/>
+  <rect x="32.1" y="38" width="2.3" height="3.4" rx=".6" fill="#fff" stroke="#6b4a2b" stroke-width=".8"/>
+  <path d="M34 41 Q37 47 40 44 Q38 41 35 40 Z" fill="#ff6f91" stroke="#b83c5f" stroke-width=".8"/>
+  <!-- party hat -->
+  <path d="M30 2 L37 -1 L35 9 Z" fill="#5b8cff" stroke="#2c4fa3" stroke-width=".8" transform="rotate(14 34 5)"/>
+  <circle cx="37.5" cy="0.8" r="1.8" fill="#ffd84d"/>
+</svg>
