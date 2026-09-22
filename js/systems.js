@@ -39,7 +39,7 @@
       ]],
       ['Items', [
         'Taegeuk Guardian Aura is now its own Aura type with a plain explanation of how it works. Its upgrade recipes list every material, and Next points to the next level.',
-        'Pet gear recipes now read as two clean ladders, weapon then armor, one row per piece, without the enhancement toggle.',
+        'Recipes always show enhancement ladders, one compact row each right after the item, so the old toggle is gone. Pet gear reads as two clean ladders, weapon then armor.',
       ]],
       ['Heroes', [
         'Brand-new hero pages: a summary card with rank chips, then Tier 2, Tier 1 and How it\'s scored tabs. No more endless scrolling.',
