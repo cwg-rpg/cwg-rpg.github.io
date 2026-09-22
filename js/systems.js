@@ -35,13 +35,23 @@
   };
   const CHANGES = [
     ['22 Sep 2026', [
-      'Where to farm next: pick your gear once and follow the next step for every slot. Two views, Simple and Detailed. "I have it" moves the slot on and ticks the gear checklist for you.',
-      'Gear checklists now run from the first piece to the last enhancement of every slot, with every material and its source in place.',
-      'Party dungeons: the Contribution and Permanent Engraving system, every track and the cost of each level.',
-      'Tier list: the Solo grade now weighs survival more, and heroes without Strength pay a little for their thinner HP. The AFK column now means farming alone: half no-click damage, half no-click survival.',
+      ['Planner', [
+        'New "Where to farm next" page: pick what you wear once, then follow one next step per slot. Detailed view by default, Simple view for a quick glance.',
+        'A "Where to farm now" panel fills itself from your route: one block per material, the monster to kill, its drops, and the ones you need marked. Bosses are colour tagged.',
+        'Recipe cards read top to bottom, what you need then the result. "Got it, next" moves the slot on and ticks the gear checklist. Anything you tap opens on the same page.',
+      ]],
+      ['Guides', [
+        'Gear checklists run from the first piece to the last enhancement of every slot, with every material and where it comes from.',
+      ]],
+      ['Game systems', [
+        'Party dungeons: the Contribution and Permanent Engraving system, every track and the cost of each level.',
+      ]],
+      ['Tier list', [
+        'Solo grade weighs survival more, and heroes without Strength pay a little for thinner HP. AFK now means farming alone: half no-click damage, half no-click survival.',
+      ]],
     ]],
   ];
-  P.changelog = () => `<h2>Changelog</h2>${CHANGES.map(([d, xs]) => `<h3>${esc(d)}</h3><ul>${xs.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`).join('')}`;
+  P.changelog = () => `<h2>Changelog</h2>${CHANGES.map(([d, cats]) => `<h3>${esc(d)}</h3>${cats.map(([c, xs]) => `<h4>${esc(c)}</h4><ul>${xs.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`).join('')}`).join('')}`;
   P.credits = () => `<h2>Credits</h2><ul><li>CWG RPG - Covenant of Warring Gods 1.1.0 by TheMidLane / Gwelawyr's RPG Ports. Discord: <a href="https://discord.gg/Z5Pf8exufw" target="_blank" rel="noopener">discord.gg/Z5Pf8exufw</a>.</li><li>Every number here comes from the map's own data.</li><li>Early-game route based on Stoner's guide. Hero portraits from the community wiki, item icons from the community 3.81 planner.</li><li>Gear planner based on Gwelawyr's planner.</li><li>Built with Claude (Anthropic). The tier list is a calculation, not an in-game measurement.</li></ul>`;
   K.hooks.push((page, out) => { if (page !== 'guides') return; out.querySelectorAll('input[name=stat]').forEach(r => r.addEventListener('change', () => { try { localStorage.setItem('cwgStat', r.value); } catch (e) { } K.route(); })); out.querySelectorAll('input.gstep').forEach(cb => cb.addEventListener('change', () => { let d = {}; try { d = JSON.parse(localStorage.getItem('cwgGuideDone') || '{}') || {}; } catch (e) { } let o = {}; try { o = JSON.parse(localStorage.getItem('cwgOwned') || '{}') || {}; } catch (e) { } const all = [...out.querySelectorAll('input.gstep')]; const targets = cb.checked ? all.slice(0, all.indexOf(cb) + 1) : all.slice(all.indexOf(cb)); for (const c of targets) { c.checked = cb.checked; if (cb.checked) d[c.dataset.k] = 1; else delete d[c.dataset.k]; { const early = out.querySelector('.sub-tabs a.on') && /early-game/.test(out.querySelector('.sub-tabs a.on').getAttribute('href') || ''); for (const id of (c.dataset.res || '').split(',').filter(Boolean)) { if (!early && !K.GEAR_TYPES.has((K.I[id] || {}).type)) continue; if (cb.checked) o[id] = 1; else delete o[id]; } } c.closest('tr').classList.toggle('done', cb.checked); } try { localStorage.setItem('cwgGuideDone', JSON.stringify(d)); localStorage.setItem('cwgOwned', JSON.stringify(o)); } catch (e) { } })); });
   KL.guides = 'Guide'; for (const k of KEYS) KL['systems?sys=' + k] = 'Game system';
