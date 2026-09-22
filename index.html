@@ -1,0 +1,82 @@
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CWG RPG Wiki</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+:root{--bg:#0d1017;--paper:#161b25;--ink:#e6e9f0;--muted:#98a2b8;--rule:#2a3245;--accent:#5b8cff;--accent-soft:#1c2740;--ok:#7fd18a;--warn:#e3b45a;--bad:#e06a6a;--code:#1f2634;--magic:#b39cff;
+--display:"Fraunces",Georgia,serif;--body:"Source Sans 3","Segoe UI",system-ui,sans-serif;--mono:"JetBrains Mono",Consolas,monospace}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;padding-inline:clamp(16px,4vw,48px);padding-block:24px 64px;margin:0}
+.wrap{max-width:1100px;margin:0 auto}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,5vw,40px);line-height:1.05;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 14px;max-width:80ch}
+h2{font-family:var(--display);font-weight:500;font-size:24px;margin:24px 0 10px}
+h3{font-family:var(--display);font-weight:700;font-size:17px;margin:16px 0 6px}
+h4{font-size:14px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:14px 0 4px}
+p{max-width:80ch;margin:0 0 10px}
+ul,ol{max-width:84ch;margin:0 0 10px;padding-left:22px}
+li{margin:3px 0}
+code{font-family:var(--mono);font-size:.86em;background:var(--code);padding:1px 5px;border-radius:3px}
+a{color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--accent)}a:hover{border-bottom-style:solid}
+.card{background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;margin:12px 0}
+.card.hi{border-left:4px solid var(--accent)}.card.warn{border:2px solid var(--warn);border-left:6px solid var(--warn);background:#2a2412}.card.warn b{color:var(--warn)}
+.banner{display:block;box-shadow:0 0 0 1px var(--rule),0 12px 40px rgba(0,0,0,.6);width:100%;height:auto;max-height:370px;object-fit:cover;object-position:center 50%;border-radius:8px;margin:0 0 10px}.vh{position:absolute;left:-9999px}
+.sys-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media (max-width:760px){.sys-grid{grid-template-columns:1fr}}.sys-grid .card{margin:0}.sys-grid ol,.sys-grid ul{margin:0}.tbl.compact table{font-size:13px}.tbl.compact th,.tbl.compact td{padding:4px 7px}
+a.discord{display:inline-block;background:#5865F2;color:#fff;border:none;border-radius:6px;padding:8px 14px;font-weight:600}a.discord:hover{background:#4752c4;border:none}
+a.card.home{display:block;border-bottom:1px solid var(--rule);color:inherit}a.card.home:hover{border-color:var(--accent)}a.card.home h3{margin-top:0;color:var(--accent)}a.card.home p{margin:0}
+.search{display:flex;gap:10px;align-items:center;margin:10px 0 6px;flex-wrap:wrap}
+.search input{flex:1;min-width:240px;font:17px var(--body);color:var(--ink);background:var(--paper);border:2px solid var(--rule);border-radius:6px;padding:10px 12px}
+.search input:focus{outline:none;border-color:var(--accent)}
+nav.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:2px solid var(--rule);margin:8px 0 16px}
+nav.tabs a{border:none;border-bottom:3px solid transparent;color:var(--muted);font:600 14px var(--body);padding:8px 10px}
+nav.tabs a.on{color:var(--accent);border-bottom-color:var(--accent)}
+.sub-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 14px}
+.sub-tabs a{border:1px solid var(--rule);border-radius:20px;padding:4px 12px;font-size:14px;font-weight:600;color:var(--muted)}
+.sub-tabs a.on{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.tag{display:inline-block;font-size:11px;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;border-radius:3px;margin-right:4px;border:1px solid var(--rule);color:var(--muted)}
+.tag.ok{color:var(--ok);border-color:var(--ok)}.tag.warn{color:var(--warn);border-color:var(--warn)}.tag.bad{color:var(--bad);border-color:var(--bad)}.tag.magic{color:var(--magic);border-color:var(--magic)}.tag.acc{color:var(--accent);background:var(--accent-soft);border-color:transparent}
+.tbl{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:14px;background:var(--paper)}
+th,td{text-align:left;padding:6px 9px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.small{font-size:13px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;font-size:14px}
+.kv b{color:var(--muted);font-weight:600}
+.hit{padding:8px 0;border-bottom:1px solid var(--rule)}
+.field{border:1px solid var(--rule);border-radius:6px;padding:12px 14px;margin:10px 0;background:var(--paper)}
+.field h3{margin-top:0}
+details{margin:6px 0}summary{cursor:pointer;font-weight:600}
+.pre{white-space:pre-line}
+.ico{display:inline-block;width:22px;height:22px;vertical-align:-6px;margin-right:5px;border-radius:3px;background:#0a0d14}
+.tip{background:#141a24;color:#eaf0f6;border:1px solid #3a4658;border-radius:6px;padding:10px 12px;margin:8px 0;font-size:14px;line-height:1.45;max-width:80ch}
+.picklist a{display:block;padding:4px 0;border:none}
+.picklist{max-height:260px;overflow:auto}
+.ln{font-family:var(--mono);font-size:.8em;color:var(--muted)}
+.kv span ul{margin:0;padding-left:18px}
+.kv{grid-template-columns:minmax(90px,max-content) 1fr}
+.grade{display:inline-block;min-width:26px;text-align:center;font-weight:700;border-radius:4px;padding:1px 6px;color:#fff}.gS{background:#2f6fe0}.gA{background:#2e8a6a}.gB{background:#9a7b12}.gC{background:#b0463c}.gD{background:#5a6070}
+input.gstep{width:20px;height:20px;accent-color:var(--accent);cursor:pointer;margin:0 6px 0 0}table.steps tr:hover td{background:var(--accent-soft)}table.steps tr.done td{opacity:.45;text-decoration:line-through}table.steps{width:auto}table.steps td{padding:3px 10px 3px 0;border:none;vertical-align:top}table.steps td:first-child{white-space:nowrap;color:var(--muted)}table.steps.route{width:100%}table.steps.route tr.zh td{padding:12px 0 4px;font:600 12px var(--body);letter-spacing:.05em;text-transform:uppercase;color:var(--accent);border-bottom:1px solid var(--rule)}table.steps.route td{padding:4px 10px 4px 0;border-bottom:1px solid var(--rule)}table.steps.route td.num{color:var(--muted);width:2em}table.steps.plain td{padding:5px 10px 5px 0;border-bottom:1px solid var(--rule)}table.steps.plain{width:100%}
+</style>
+<div class="wrap">
+<a href="#home" style="border:none"><img class="banner" src="img_banner.jpg" alt="CWG RPG - Covenant of Warring Gods"></a>
+<h1 class="vh">CWG RPG Wiki</h1>
+<p class="sub"><img src="img_map.png" alt="" style="width:28px;height:28px;vertical-align:-8px;margin-right:6px;border-radius:4px">Wiki · Map version 1.1.0</p>
+<div class="search"><input id="q" type="search" placeholder="search an item, monster, zone, hero, command ..." autofocus><span class="small" id="qcount"></span></div>
+<nav class="tabs" id="tabs">
+<a href="#home">Home</a><a href="#zones">Zones</a><a href="#monsters">Monsters</a><a href="#items">Items</a><a href="#recipes">Recipes</a><a href="#heroes">Heroes</a><a href="#tierlist">Tier List</a><a href="#systems">Game Systems</a><a href="#supporter">Supporter</a><a href="#pets">Pets</a><a href="#guides">Guides</a><a href="#calc">Calculators</a><a href="#commands">Commands</a>
+</nav>
+<div id="out"></div>
+<p class="small" style="margin-top:32px;border-top:1px solid var(--rule);padding-top:10px"><a href="#credits">Credits</a></p>
+</div>
+<script src="cwg_data.js"></script>
+<script src="cwg_icons.js"></script>
+<script src="js/core.js"></script>
+<script src="js/world.js"></script>
+<script src="js/items.js"></script>
+<script src="js/heroes.js"></script>
+<script src="js/supporter.js"></script>
+<script src="js/systems.js"></script>
+<script src="js/tools.js"></script>
+<script>WK.start();</script>
