@@ -44,19 +44,24 @@
        to the healing. Survives if left alone = its no-click healing covers a mid-game pack. */
     const tolOf = (hp, p, s, ev, heal, fs) => { const e = Math.min(0.95, (ev || 0) > 1 ? ev / 100 : (ev || 0)); const bud = hp / (fs || 60) + hp * Math.max(0, heal) / 100; return [bud / Math.max(1e-6, p * (1 - e)), bud / Math.max(1e-6, s)]; };
     const tolScore = (t, best, R) => { const f = (x, b) => Math.max(0, Math.min(1, Math.log(Math.max(x, 1e-9) * R / b) / Math.log(R))); return 100 * (0.5 * f(t[0], best[0]) + 0.5 * f(t[1], best[1])); };
-    const kainTol = o => { const b = o.tank_breakdown || {}; return tolOf(b.hp_pool, b.phys_damage_taken, b.spell_damage_taken, b.evasion, (b.recovery_pct_per_s || 0) + kainPct(o, o.swings || 0), b.fight_s); };
-    const KBEST = (() => { const all = T.heroes.map(r => kainTol(base(r))); return [Math.max(...all.map(x => x[0])), Math.max(...all.map(x => x[1]))]; })();
+    /* v16 Tank: 60% the size of hit survived (HP / damage taken, evasion at half) + 40% healing capped at 10% of max HP/s, log scales
+       below the best hero in view, x0.9, +10 for a taunt. The lifesteal pet adds to the healing (still capped). */
+    const tankRaw = (hp, p, s, ev, heal, fs, cap) => { const e = Math.min(0.95, (ev || 0) > 1 ? ev / 100 : (ev || 0)); const h = Math.min(Math.max(0, heal), cap || 10) / 100 * hp + hp / (fs || 60); return [hp / Math.max(1e-6, p * (1 - 0.5 * e)), hp / Math.max(1e-6, s), h / Math.max(1e-6, p * (1 - e)), h / Math.max(1e-6, s)]; };
+    const tankScore = (raw, best, b, taunt) => { const L = (x, bb, R) => Math.max(0, Math.min(1, Math.log(Math.max(x, 1e-9) * R / bb) / Math.log(R))); const w = b.tank_w || [0.6, 0.4]; const bs = (L(raw[0], best[0], b.burst_range || 100) + L(raw[1], best[1], b.burst_range || 100)) / 2, ss = (L(raw[2], best[2], b.sus_range || 1000) + L(raw[3], best[3], b.sus_range || 1000)) / 2; return 100 * (b.tank_scale || 0.9) * (w[0] * bs + w[1] * ss) + (taunt ? (b.taunt_bonus || 10) : 0); };
+    const kainRaw = o => { const b = o.tank_breakdown || {}; return tankRaw(b.hp_pool, b.phys_damage_taken, b.spell_damage_taken, b.evasion, (b.recovery_pct_per_s || 0) + kainPct(o, o.swings || 0), b.fight_s, b.heal_cap); };
+    const KBEST = (() => { const all = T.heroes.map(r => kainRaw(base(r))); return [0, 1, 2, 3].map(i => Math.max(...all.map(x => x[i]))); })();
     const dmgPart = o => Math.max(0, (o.afk || 0) / (o.afk_safe ? 1 : 0.5) - 0.5 * (o.afk_tank || 0));
-    const withKain = o => { const b = o.tank_breakdown; if (!b || !kain || b.tol_best_phys == null) return o; const R = b.tol_range || 1000;
-      const tank = Math.round((b.tank_scale || 1) * tolScore(kainTol(o), KBEST, R) + (b.taunt ? (b.taunt_bonus || 0) : 0));
+    const withKain = o => { const b = o.tank_breakdown; if (!b || !kain || !b.tank_best) return o;
+      const tank = Math.min(100, Math.round(tankScore(kainRaw(o), KBEST, b, b.taunt)));
       const ap = o.afk_passive || {}; const net = (o.afk_sustain || 0) + kainPct(o, o.swings_afk || 0); const safe = net >= 0;
-      const at = Math.round(tolScore(tolOf(b.hp_pool, b.afk_phys_taken || b.phys_damage_taken, b.afk_spell_taken || b.spell_damage_taken, ap.evasion, (ap.recovery_pct_per_s || 0) + kainPct(o, o.swings_afk || 0), b.fight_s), KBEST, R));
+      const at = Math.min(100, Math.round(tankScore(tankRaw(b.hp_pool, b.afk_phys_taken || b.phys_damage_taken, b.afk_spell_taken || b.spell_damage_taken, ap.evasion, (ap.recovery_pct_per_s || 0) + kainPct(o, o.swings_afk || 0), b.fight_s, b.heal_cap), KBEST, b, false)));
       return { ...o, tank, afk_tank: at, afk_safe: safe, afk_sustain: +net.toFixed(2), afk: +((dmgPart(o) + 0.5 * at) * (safe ? 1 : 0.5)).toFixed(1), afk_passive: { ...ap, recovery_pct_per_s: (ap.recovery_pct_per_s || 0) + kainPct(o, o.swings_afk || 0) } }; };
     const src = r => withKain(base(r));
     const pool = T.heroes.filter(r => !f2p || r.free !== false);
     const max = {}; for (const k of ['boss', 'aoe', 'afk', 'utility', 'tank']) max[k] = Math.max(1, ...pool.map(r => src(r)[k] || 0));
     const norm = (r, k) => (src(r)[k] || 0) / max[k];
-    const solo = r => 0.35 * norm(r, 'boss') + 0.1 * norm(r, 'aoe') + 0.55 * norm(r, 'tank');
+    const TLO = Math.min(...pool.map(r => src(r).tank || 0)), THI = Math.max(1, ...pool.map(r => src(r).tank || 0));
+    const solo = r => Math.pow(((src(r).tank || 0) - TLO + 5) / (THI - TLO + 5), 0.6) * Math.pow(0.8 * norm(r, 'boss') + 0.2 * norm(r, 'aoe'), 0.4);   /* v16: survival and damage both needed */
     const SAFE = { 'Survives': 1, 'Dies if left alone': 0.4 };
     const afkv = r => norm(r, 'afk');
     const afkMax = Math.max(0.001, ...pool.map(afkv));

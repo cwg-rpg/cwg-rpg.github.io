@@ -51,6 +51,7 @@
       ]],
       ['Tier list', [
         'Reworked: heroes are scored on real free gear and bought stats at three stages (Early, Mid, Late), survival is measured against the map\'s own bosses and monster packs, and basic attacks count.',
+        'Tank now weighs the size of hit a hero survives over its healing, so Strength heroes with big HP pools rank as the real tanks. Solo needs both survival and damage.',
         'Nature\'s taunt makes it the top tank. Healer now means real party healing. The lifesteal pet choice covers Kain and evolved Kain and re-ranks every column.',
       ]],
     ]],
