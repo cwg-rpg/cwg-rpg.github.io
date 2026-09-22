@@ -34,6 +34,9 @@
   };
   const CHANGES = [
     ['23 Sep 2026', [
+      ['Game systems', [
+        'Attribute enhancement is much easier to read: every step now shows exactly what a failed try does, and the levels you can never drop below are spelled out.',
+      ]],
       ['Heroes', [
         'Brand-new hero pages: a summary card with rank chips, then Tier 2, Tier 1 and How it\'s scored tabs. No more endless scrolling.',
         'Every ability now shows its in-game icon in a compact list. Tap one for the full tooltip.',
