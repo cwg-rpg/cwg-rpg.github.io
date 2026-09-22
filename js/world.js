@@ -7,6 +7,7 @@
     const H = (W.heroes || []).length, T = (W.tierlist && W.tierlist.heroes || []).length;
     const card = (h, txt, sub) => `<a class="card home" href="#${h}"><h3>${txt}</h3><p class="small">${sub}</p></a>`;
     return `<div class="card hi"><p style="margin:0"><img src="img_map.png" alt="" style="width:40px;height:40px;vertical-align:middle;margin-right:8px;border-radius:6px"><b>New?</b> Start with the ${link('guides', 'early-game', 'Early game guide')}.</p></div>
+    <div class="card hi"><p style="margin:0"><span style="display:inline-block;width:40px;height:40px;vertical-align:middle;margin-right:8px;border-radius:6px;background:var(--accent-soft);color:var(--accent);text-align:center;line-height:40px;font-size:22px">➜</span><b>Past the start?</b> ${link('planner', '', 'Where to farm next')} - pick your gear once, then follow the next step for every slot.</p></div>
     <p><a class="discord" href="https://discord.gg/Z5Pf8exufw" target="_blank" rel="noopener">Join the CWG RPG Discord</a> <span class="small">- community and updates</span></p>
     <div class="grid">
       ${card('zones', 'Zones', `${W.zones.length} areas in order, with entry requirements, bosses and shops`)}
@@ -15,7 +16,7 @@
       ${card('recipes', 'Recipes', `${(W.recipe_groups || []).length} crafting recipes and enhancement chains`)}
       ${card('heroes', 'Heroes', `${[...new Set((W.heroes || []).map(h => h.lineage))].length} heroes, tier 1 and tier 2 abilities`)}
       ${card('tierlist', 'Tier list', 'Solo, boss, AoE, AFK, utility and tank grades, free-to-play, tier 1 and lifesteal-pet views')}
-      ${card('guides', 'Guides', 'Early game route, gear progression per slot, class change, screen buttons')}
+      ${card('guides', 'Guides', 'Early game route and gear progression per slot, with checklists')}
       ${card('systems', 'Game systems', 'Potions, stat shops, awakening, slots, attributes, party dungeons, potential, sailing, relics, Dimension Link')}
       ${card('supporter', 'Supporter', 'What the supporter menu sells and what each reward does')}
       ${card('pets', 'Pets', 'Every pet, its bonus and how to register it')}

@@ -88,5 +88,6 @@ window.WK = (function () {
   const bigrams = s => { const b = new Set(); s = ' ' + s + ' '; for (let i = 0; i < s.length - 1; i++) b.add(s.slice(i, i + 2)); return b; };
   const sim = (a, b) => { const x = bigrams(a), y = bigrams(b); let n = 0; for (const g of x) if (y.has(g)) n++; return 2 * n / (x.size + y.size); };
   const tbl = (rows, h) => `<div class="tbl"><table class="sortable"><tr>${h.map(x => `<th>${x}</th>`).join('')}</tr>${rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>`;
-  return { W, I, M, R, Z, $, esc, link, fmt, pct, tag, SITE, icon, iname, ilink, statLine, tipHtml, madeBy, usedIn, mlink, zlink, droppers, rrow, rtable, gen, cite, INDEX, KL, P, filters, hooks, route, start, subtabs, filterBox, tbl };
+  const GEAR_TYPES = new Set(['Weapon', 'Armor', 'Gloves', 'Accessory', 'Gem', 'Hidden', 'Pet gear']);
+  return { GEAR_TYPES, W, I, M, R, Z, $, esc, link, fmt, pct, tag, SITE, icon, iname, ilink, statLine, tipHtml, madeBy, usedIn, mlink, zlink, droppers, rrow, rtable, gen, cite, INDEX, KL, P, filters, hooks, route, start, subtabs, filterBox, tbl };
 })();
