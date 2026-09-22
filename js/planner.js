@@ -118,9 +118,10 @@
   const modeBar = () => `<p><b>View:</b> ${[['detailed', 'Detailed'], ['simple', 'Simple']].map(([k, l]) => `<label style="margin-right:12px"><input type="radio" name="plmode" value="${k}" ${st.mode === k ? 'checked' : ''}> ${l}</label>`).join('')} <span style="margin-left:10px"><b>Main stat:</b> ${['STR', 'AGI', 'INT'].map(s => `<label style="margin-left:8px"><input type="radio" name="plstat" value="${s}" ${s === stat() ? 'checked' : ''}> ${s}</label>`).join('')}</span></p>`;
 
   P.planner = () => GEAR ? (st.mode === 'detailed'
-    ? `<h2>Where to farm next</h2>${guideBox()}${modeBar()}${detailed()}${picker()}`
-    : `<h2>Where to farm next</h2><p class="small">Tap an icon and pick what you have. Each slot shows the next piece and how to get it. Tap a slot and the panel below shows where to farm. Press "Got it → next" when you have the next piece.</p>${modeBar()}<div class="pl-cards">${SECS.map(card).join('')}</div>${inspect()}${totals()}<p class="small" style="margin-top:10px"><a href="#guides/gear">Gear checklist</a> · <a href="#planner" data-reset="1">Clear all</a></p>${picker()}`) : '<h2>Where to farm next</h2>';
+    ? `<h2>Where to farm next</h2>${K.profileBar()}${guideBox()}${modeBar()}${detailed()}${picker()}`
+    : `<h2>Where to farm next</h2>${K.profileBar()}<p class="small">Tap an icon and pick what you have. Each slot shows the next piece and how to get it. Tap a slot and the panel below shows where to farm. Press "Got it → next" when you have the next piece.</p>${modeBar()}<div class="pl-cards">${SECS.map(card).join('')}</div>${inspect()}${totals()}<p class="small" style="margin-top:10px"><a href="#guides/gear">Gear checklist</a> · <a href="#planner" data-reset="1">Clear all</a></p>${picker()}`) : '<h2>Where to farm next</h2>';
 
+  window.addEventListener('cwgprofile', () => { st.sel = null; st.undo = null; st.insp = null; st.more = false; st.ssi = null; st.pick = null; });
   hooks.push((page, out) => {
     if (page !== 'planner') return;
     const rerender = () => { const y = window.scrollY; out.innerHTML = P.planner(); bind(); window.scrollTo(0, y); };

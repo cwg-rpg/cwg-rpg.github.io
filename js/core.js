@@ -10,7 +10,7 @@ window.WK = (function () {
 
   /* ---- items ---- */
   const I = W.items, M = W.monsters, R = W.recipes, Z = {}; for (const z of W.zones) Z[z.id] = z;
-  const icon = id => ICONS[id] ? `<img class="ico" src="data:image/webp;base64,${ICONS[id]}" alt="" loading="lazy">` : '';
+  const icon = id => ICONS[id] ? `<img class="ico" src="data:image/webp;base64,${ICONS[id]}" alt="">` : '';
   const iname = i => `<span style="${i.color ? 'color:' + i.color : ''}">${esc(i.name)}</span>`;
   const ilink = id => { const i = I[id]; return i ? `<a href="#item/${id}">${icon(id)}${iname(i)}</a>` : esc(id); };
   const statLine = s => esc(s[0]) + ' +' + fmt(s[1]) + (s[2] ? '%' : '');
@@ -89,8 +89,33 @@ window.WK = (function () {
   const sim = (a, b) => { const x = bigrams(a), y = bigrams(b); let n = 0; for (const g of x) if (y.has(g)) n++; return 2 * n / (x.size + y.size); };
   const tbl = (rows, h) => `<div class="tbl"><table class="sortable"><tr>${h.map(x => `<th>${x}</th>`).join('')}</tr>${rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>`;
   const GEAR_TYPES = new Set(['Weapon', 'Armor', 'Gloves', 'Accessory', 'Gem', 'Hidden', 'Pet gear']);
+  /* ---- profiles: one set of checklist ticks, owned gear, main stat and part ticks per character ----
+     The live keys always hold the current profile, so every page keeps reading them as before. */
+  const PKEYS = ['cwgGuideDone', 'cwgOwned', 'cwgStat', 'cwgPlanParts'];
+  const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const lsSet = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { } };
+  const profs = () => { let p = null; try { p = JSON.parse(lsGet('cwgProfiles') || 'null'); } catch (e) { } if (!p || !Array.isArray(p.list) || !p.list.length) p = { cur: 'p1', list: [{ id: 'p1', name: 'Main' }], data: {} }; if (!p.list.some(x => x.id === p.cur)) p.cur = p.list[0].id; p.data = p.data || {}; return p; };
+  const saveProfs = p => lsSet('cwgProfiles', JSON.stringify(p));
+  const snapLive = () => { const o = {}; for (const k of PKEYS) { const v = lsGet(k); if (v != null) o[k] = v; } return o; };
+  const loadLive = o => { for (const k of PKEYS) lsSet(k, o && o[k] != null ? o[k] : null); };
+  const useProfile = (p, id) => { if (id !== p.cur) { p.data[p.cur] = snapLive(); loadLive(p.data[id] || {}); delete p.data[id]; p.cur = id; } saveProfs(p); window.dispatchEvent(new Event('cwgprofile')); };
+  let profUi = null; /* null | 'new' | 'ren' | 'del' */
+  const profileBar = () => { const p = profs(); const cur = p.list.find(x => x.id === p.cur);
+    const edit = profUi === 'new' || profUi === 'ren' ? `<input class="prof-in" maxlength="24" placeholder="${profUi === 'new' ? 'name, e.g. Nature' : ''}" value="${profUi === 'ren' ? esc(cur.name) : ''}"> <a href="#" data-prof="ok">Save</a> <a href="#" data-prof="x" class="small">Cancel</a>`
+      : profUi === 'del' ? `<span class="small">Delete "${esc(cur.name)}" and its ticks?</span> <a href="#" data-prof="delok">Yes</a> <a href="#" data-prof="x" class="small">No</a>`
+      : `<a href="#" data-prof="new" class="small">+ New</a><a href="#" data-prof="ren" class="small">Rename</a>${p.list.length > 1 ? `<a href="#" data-prof="del" class="small">Delete</a>` : ''}`;
+    return `<div class="prof"><span class="small">Profile</span><select class="prof-sel" aria-label="Profile">${p.list.map(x => `<option value="${esc(x.id)}" ${x.id === p.cur ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>${edit}</div>`; };
+  /* one page-level listener, so the bar keeps working after the planner redraws itself */
+  const profRedraw = () => { route(); const i = document.querySelector('.prof-in'); if (i) { i.focus(); i.select(); } };
+  const profSave = () => { const inp = document.querySelector('.prof-in'); const name = ((inp && inp.value) || '').trim().slice(0, 24); if (name) { const p = profs(); if (profUi === 'new') { p.data[p.cur] = snapLive(); const id = 'p' + Date.now().toString(36); p.list.push({ id, name }); loadLive({}); p.cur = id; saveProfs(p); window.dispatchEvent(new Event('cwgprofile')); } else { p.list.find(x => x.id === p.cur).name = name; saveProfs(p); } } profUi = null; route(); };
+  document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('[data-prof]'); if (!a) return; e.preventDefault(); const k = a.dataset.prof;
+    if (k === 'ok') return profSave();
+    if (k === 'delok') { const p = profs(); const gone = p.cur; p.list = p.list.filter(x => x.id !== gone); delete p.data[gone]; const next = p.list[0].id; loadLive(p.data[next] || {}); delete p.data[next]; p.cur = next; saveProfs(p); window.dispatchEvent(new Event('cwgprofile')); profUi = null; return route(); }
+    profUi = k === 'x' ? null : k; profRedraw(); });
+  document.addEventListener('change', e => { if (!e.target.classList || !e.target.classList.contains('prof-sel')) return; profUi = null; useProfile(profs(), e.target.value); route(); });
+  document.addEventListener('keydown', e => { if (!e.target.classList || !e.target.classList.contains('prof-in')) return; if (e.key === 'Enter') { e.preventDefault(); profSave(); } if (e.key === 'Escape') { profUi = null; route(); } });
   let VARMAP = null;
   const varKey = it => { const base = k => { const x = I[k]; return x ? (x.variant ? (x.family || x.name) : x.name) : k; }; const r = madeBy(it.id)[0]; const sig = r ? 'R:' + r.in.map(([k]) => base(k)).sort().join('+') : 'D:' + [...new Set((it.drops || []).map(x => x.m))].sort().join(','); return it.family + '|' + it.type + '|' + (it.level || 0) + '|' + sig; };
   const swapVar = (id, stat) => { const it = I[id]; if (!it || !it.variant || !stat || it.variant === stat) return id; if (!VARMAP) { VARMAP = {}; for (const x of Object.values(I)) if (x.variant) (VARMAP[varKey(x)] = VARMAP[varKey(x)] || {})[x.variant] = x.id; } const v = VARMAP[varKey(it)]; return v && v[stat] ? v[stat] : id; };
-  return { swapVar, GEAR_TYPES, W, I, M, R, Z, $, esc, link, fmt, pct, tag, icon, iname, ilink, statLine, tipHtml, madeBy, usedIn, mlink, zlink, rrow, rtable, gen, INDEX, KL, P, filters, hooks, route, start, subtabs, filterBox, tbl };
+  return { profileBar, swapVar, GEAR_TYPES, W, I, M, R, Z, $, esc, link, fmt, pct, tag, icon, iname, ilink, statLine, tipHtml, madeBy, usedIn, mlink, zlink, rrow, rtable, gen, INDEX, KL, P, filters, hooks, route, start, subtabs, filterBox, tbl };
 })();
