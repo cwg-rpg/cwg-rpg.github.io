@@ -100,6 +100,9 @@ window.WK = (function () {
   const loadLive = o => { for (const k of PKEYS) lsSet(k, o && o[k] != null ? o[k] : null); };
   const useProfile = (p, id) => { if (id !== p.cur) { p.data[p.cur] = snapLive(); loadLive(p.data[id] || {}); delete p.data[id]; p.cur = id; } saveProfs(p); window.dispatchEvent(new Event('cwgprofile')); };
   let profUi = null; /* null | 'new' | 'ren' | 'del' */
+  const statBar = (name, hint) => { let s = 'STR', hid = false; try { s = localStorage.getItem('cwgStat') || 'STR'; hid = localStorage.getItem('cwgStatBar') === 'off'; } catch (e) { }
+    if (hid) return `<p class="small sb-min">Main stat: <b class="sb-${s.toLowerCase()}-t">${s}</b> · <a href="#" data-statbar="on">Change</a></p>`;
+    return `<div class="statbar"><span class="sb-l">Your main stat</span><span class="sb-seg" role="radiogroup" aria-label="Your main stat">${['STR', 'AGI', 'INT'].map(x => `<label class="sb-${x.toLowerCase()}${x === s ? ' on' : ''}"><input type="radio" name="${name}" value="${x}" ${x === s ? 'checked' : ''}>${x}</label>`).join('')}</span><span class="sb-h">${hint}</span><a href="#" data-statbar="off" class="small sb-hide">Hide</a></div>`; };
   const profileBar = () => { const p = profs(); const cur = p.list.find(x => x.id === p.cur);
     const edit = profUi === 'new' || profUi === 'ren' ? `<input class="prof-in" maxlength="24" placeholder="${profUi === 'new' ? 'name, e.g. Nature' : ''}" value="${profUi === 'ren' ? esc(cur.name) : ''}"> <a href="#" data-prof="ok">Save</a> <a href="#" data-prof="x" class="small">Cancel</a>`
       : profUi === 'del' ? `<span class="small">Delete "${esc(cur.name)}" and its ticks?</span> <a href="#" data-prof="delok">Yes</a> <a href="#" data-prof="x" class="small">No</a>`
@@ -112,10 +115,11 @@ window.WK = (function () {
     if (k === 'ok') return profSave();
     if (k === 'delok') { const p = profs(); const gone = p.cur; p.list = p.list.filter(x => x.id !== gone); delete p.data[gone]; const next = p.list[0].id; loadLive(p.data[next] || {}); delete p.data[next]; p.cur = next; saveProfs(p); window.dispatchEvent(new Event('cwgprofile')); profUi = null; return route(); }
     profUi = k === 'x' ? null : k; profRedraw(); });
+  document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('[data-statbar]'); if (!a) return; e.preventDefault(); try { localStorage.setItem('cwgStatBar', a.dataset.statbar); } catch (x) { } route(); });
   document.addEventListener('change', e => { if (!e.target.classList || !e.target.classList.contains('prof-sel')) return; profUi = null; useProfile(profs(), e.target.value); route(); });
   document.addEventListener('keydown', e => { if (!e.target.classList || !e.target.classList.contains('prof-in')) return; if (e.key === 'Enter') { e.preventDefault(); profSave(); } if (e.key === 'Escape') { profUi = null; route(); } });
   let VARMAP = null;
   const varKey = it => { const base = k => { const x = I[k]; return x ? (x.variant ? (x.family || x.name) : x.name) : k; }; const r = madeBy(it.id)[0]; const sig = r ? 'R:' + r.in.map(([k]) => base(k)).sort().join('+') : 'D:' + [...new Set((it.drops || []).map(x => x.m))].sort().join(','); return it.family + '|' + it.type + '|' + (it.level || 0) + '|' + sig; };
   const swapVar = (id, stat) => { const it = I[id]; if (!it || !it.variant || !stat || it.variant === stat) return id; if (!VARMAP) { VARMAP = {}; for (const x of Object.values(I)) if (x.variant) (VARMAP[varKey(x)] = VARMAP[varKey(x)] || {})[x.variant] = x.id; } const v = VARMAP[varKey(it)]; return v && v[stat] ? v[stat] : id; };
-  return { profileBar, swapVar, GEAR_TYPES, W, I, M, R, Z, $, esc, link, fmt, pct, tag, icon, iname, ilink, statLine, tipHtml, madeBy, usedIn, mlink, zlink, rrow, rtable, gen, INDEX, KL, P, filters, hooks, route, start, subtabs, filterBox, tbl };
+  return { statBar, profileBar, swapVar, GEAR_TYPES, W, I, M, R, Z, $, esc, link, fmt, pct, tag, icon, iname, ilink, statLine, tipHtml, madeBy, usedIn, mlink, zlink, rrow, rtable, gen, INDEX, KL, P, filters, hooks, route, start, subtabs, filterBox, tbl };
 })();
