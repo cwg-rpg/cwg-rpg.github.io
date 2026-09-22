@@ -21,8 +21,7 @@
   P.guides = id => {
     const G = W.guides || [];
     let stat = 'STR'; try { stat = localStorage.getItem('cwgStat') || 'STR'; } catch (e) { }
-    const VARS = {}; for (const it of Object.values(I)) if (it.variant) (VARS[it.family + '|' + it.type + '|' + (it.level || 0)] = VARS[it.family + '|' + it.type + '|' + (it.level || 0)] || {})[it.variant] = it.id;
-    const swap = c => { const it = I[c]; if (!it || !it.variant || it.variant === stat) return c; const v = VARS[it.family + '|' + it.type + '|' + (it.level || 0)]; return v && v[stat] ? v[stat] : c; };
+    const swap = c => K.swapVar(c, stat);
     const rich = s => esc(s).replace(/\{\{i:([A-Z0-9]{4})\}\}/g, (m, c) => ilink(swap(c))).replace(/\{\{m:([A-Za-z0-9]{4})\}\}/g, (m, c) => mlink(c)).replace(/\{\{z:(z\d\d)\}\}/g, (m, c) => Z[c] ? link('zone', c, Z[c].name) : c).replace(/\{\{l:([^|}]+)\|([^}]+)\}\}/g, (m, h, txt) => `<a href="#${h.replace(/&amp;/g, '&')}">${txt}</a>`);
     const f = K.filters; const g = G.find(x => x.id === id) || G[0]; if (!g) return '<h2>Guides</h2>';
     let done = {}; try { done = JSON.parse(localStorage.getItem('cwgGuideDone') || '{}') || {}; } catch (e) { done = {}; }
@@ -36,15 +35,18 @@
   const CHANGES = [
     ['22 Sep 2026', [
       ['Planner', [
-        'New "Where to farm next" page: pick what you wear once, then follow one next step per slot. Detailed view by default, Simple view for a quick glance.',
-        'A "Where to farm now" panel fills itself from your route: one block per material, the monster to kill, its drops, and the ones you need marked. Bosses are colour tagged.',
-        'Recipe cards read top to bottom, what you need then the result. "Got it, next" moves the slot on and ticks the gear checklist. Anything you tap opens on the same page.',
+        'New "Where to farm next" page: pick what you wear, then follow one next step per slot. Detailed view by default, Simple for a quick glance.',
+        'The Next card holds the button, with a "Where to farm now" panel under it: each part, the monster to kill, about how many kills, and a tick for parts you already have. The panel can be hidden.',
+        'Fixed: with AGI or INT picked, the weapon and accessory routes jumped to a different item line where two items share a name.',
       ]],
       ['Guides', [
         'Gear checklists run from the first piece to the last enhancement of every slot, with every material and where it comes from.',
       ]],
       ['Game systems', [
         'Party dungeons: the Contribution and Permanent Engraving system, every track and the cost of each level.',
+      ]],
+      ['Calculators', [
+        'New: roll odds for Ability, Potential and Sailing slots, Engraving cost with the party dungeon clears it takes, and Relic enhancement.',
       ]],
       ['Tier list', [
         'Solo grade weighs survival more, and heroes without Strength pay a little for thinner HP. AFK now means farming alone: half no-click damage, half no-click survival.',
