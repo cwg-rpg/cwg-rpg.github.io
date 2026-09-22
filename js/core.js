@@ -56,8 +56,10 @@ window.WK = (function () {
 
   /* ---- router ---- */
   const P = {}; const filters = {}; const hooks = [];
+  let lastView = '';
   function route() {
     const out = $('#out'); const raw = location.hash.slice(1) || 'home'; let [page, rest] = raw.split('/'); const id = rest ? decodeURIComponent(rest) : '';
+    const y0 = window.scrollY;
     if (page.includes('?')) { const [p, qs] = page.split('?'); page = p; Object.assign(filters, Object.fromEntries(new URLSearchParams(qs))); history.replaceState(null, '', '#' + page + (rest ? '/' + rest : '')); }
     const f = { ...filters };
     document.querySelectorAll('nav.tabs a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + page));
@@ -70,7 +72,8 @@ window.WK = (function () {
       rows.sort((a, b) => { const x = a.children[ci] ? a.children[ci].textContent.trim() : '', y = b.children[ci] ? b.children[ci].textContent.trim() : ''; const nx = num(x), ny = num(y); const r = nx != null && ny != null ? nx - ny : x.localeCompare(y); return dir === 'asc' ? r : -r; });
       rows.forEach(r => tb.appendChild(r)); }); }));
     for (const h of hooks) h(page, out);
-    if (!out.querySelector('input.filter:focus')) window.scrollTo(0, 0);
+    const view = page + '/' + id; const same = view === lastView; lastView = view;
+    if (out.querySelector('input.filter:focus') || same) window.scrollTo(0, y0); else window.scrollTo(0, 0);
     saveLast();
   }
   /* come back to the same page after the viewer reloads the wiki (a republish reloads every open copy) */
