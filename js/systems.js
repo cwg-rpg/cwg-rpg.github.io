@@ -67,6 +67,7 @@
         'Cleaner tags: knockbacks, pulls and stuns no longer count as debuffs, and "Only hero with" chips highlight what makes a hero unique.',
       ]],
       ['Items', [
+        'Taegeuk Guardian Aura: a gold warning on every level. A failed upgrade destroys both auras and you start over from a fresh base aura. The skip-a-level chance now reads as a share of successes.',
         'Taegeuk Guardian Aura is now its own Aura type with a plain explanation of how it works. Its upgrade recipes list every material, and Next points to the next level.',
         'Recipes always show enhancement ladders, one compact row each right after the item, so the old toggle is gone. Pet gear reads as two clean ladders, weapon then armor.',
       ]],
@@ -93,6 +94,7 @@
         'Lumipaca got a portrait worthy of its legend.',
       ]],
       ['Calculators', [
+        'New Taegeuk aura mode: base auras and Hidden Aura Fragments to reach any level, counting every restart after a fail, with or without Craft Supporter.',
         'Engraving: Lumber earned comes straight from the new Lumber per run column.',
         'Roll odds works again for all three roll systems and counts the real Reroll All price for ability slots. The attribute calculator now treats +25 as a floor.',
         'Relic enhancement works again (it showed broken numbers) and lists every step with its reset chance. Roll odds no longer breaks on Normal or better.',
