@@ -23,7 +23,7 @@
       ${card('items', 'Items', `${Object.keys(I).length.toLocaleString()} items by zone or type: stats, sources, recipes`)}
       ${card('recipes', 'Recipes', `${(W.recipe_groups || []).length} crafting recipes and enhancement chains`)}
       ${card('heroes', 'Heroes', `${[...new Set((W.heroes || []).map(h => h.lineage))].length} heroes with tier 1 and tier 2 abilities`)}
-      ${card('tierlist', 'Tier list', 'Solo, boss, AoE, AFK, utility and survival grades by stage, with F2P, tier 1 and lifesteal-pet filters')}
+      ${card('tierlist', 'Tier list', 'Solo, boss, AoE, AFK, utility and survival grades by stage, with buff, F2P and lifesteal-pet options')}
       ${card('guides', 'Guides', 'Early game route and gear progression by slot, with checklists')}
       ${card('events', 'Events', `${(W.events || []).filter(e => e.on).length} events live now, and what each one boosts`)}
       ${card('systems', 'Game systems', 'Potions, stat shops, awakening, slots, attributes, party dungeons, potential, sailing, relics, Dimension Link')}

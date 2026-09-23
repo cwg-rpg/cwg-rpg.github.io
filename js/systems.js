@@ -13,8 +13,8 @@
     if (!KEYS.length) return '<h2>Game systems</h2><p class="small">Not built yet.</p>';
     const k = KEYS.includes(f.sys) ? f.sys : KEYS[0]; const s = SY[k];
     const head = `<h2>Game systems</h2>${subtabs('systems', 'sys', KEYS.map(x => [x, s && SY[x].title || NAMES[x] || x.replace(/_/g, ' ')]), k)}`;
-    const shops = k === 'stat_shop' ? `<p>Stock and prices: ${W.zones.filter(z => (z.shops || []).length).map(z => link('zone', z.id, z.name)).join(' · ')}.</p>` : '';
-    if (s.how) return `${head}<h3>${esc(s.title || NAMES[k] || k)}</h3><p>${esc(s.what || '')}${s.open ? ` <span class="small">· ${esc(s.open)}</span>` : ''}</p>${(s.live || []).length ? `<div class="evstrip small-strip"><span class="evl"><span class="evdot"></span>Live event</span>${s.live.map(e => `<div><a class="evchip" href="#events">${esc(e.chip)}</a> <span class="evw">${esc(e.what)}</span></div>`).join('')}</div>` : ''}<div class="sys-grid${(s.tips || []).length ? '' : ' one'}"><div class="card"><h4 style="margin-top:0">How</h4><ol>${(s.how || []).map(x => `<li>${esc(x)}</li>`).join('')}</ol></div>${(s.tips || []).length ? `<div class="card tips"><h4 style="margin-top:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>Tips</h4><ul>${s.tips.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}</div>${shops}${(s.items || []).length ? `<p class="small">Items: ${gen(s.items)}</p>` : ''}${(s.monsters || []).length ? `<p class="small">Bosses: ${gen(s.monsters)}</p>` : ''}${(s.tables || []).map(table).join('')}`;
+    const shops = '';   /* stat shop towns are named in the page's own table */
+    if (s.how) return `${head}<h3>${esc(s.title || NAMES[k] || k)}</h3><p>${esc(s.what || '')}${s.open ? ` <span class="small">· ${esc(s.open)}</span>` : ''}</p>${(s.live || []).length ? `<div class="evstrip small-strip"><span class="evl"><span class="evdot"></span>Live event</span>${s.live.map(e => `<div><a class="evchip" href="#events">${esc(e.chip)}</a> <span class="evw">${esc(e.what)}</span></div>`).join('')}</div>` : ''}${(s.how || []).length || (s.tips || []).length ? `<div class="sys-grid${(s.tips || []).length && (s.how || []).length ? '' : ' one'}">${(s.how || []).length ? `<div class="card"><h4 style="margin-top:0">How</h4><ol>${s.how.map(x => `<li>${esc(x)}</li>`).join('')}</ol></div>` : ''}${(s.tips || []).length ? `<div class="card tips"><h4 style="margin-top:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>Tips</h4><ul>${s.tips.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}</div>` : ''}${shops}${(s.items || []).length ? `<p class="small">Items: ${gen(s.items)}</p>` : ''}${(s.monsters || []).length ? `<p class="small">Bosses: ${gen(s.monsters)}</p>` : ''}${(s.tables || []).map(table).join('')}`;
     return `${head}<h3>${esc(NAMES[k] || k)}</h3><p>${esc(s.summary || '')}</p>${(s.rules || []).length ? `<ul>${s.rules.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}${shops}${(s.items || []).length ? `<p>Items: ${gen(s.items)}</p>` : ''}${(s.tables || []).map(table).join('')}`;
   };
   /* ---- events (read from the map at build time) ---- */
@@ -42,8 +42,8 @@
     const si = secs.findIndex(s => s.h === cur);
     return `<h2>Guides</h2>${K.profileBar()}<div class="sub-tabs">${G.map(x => `<a href="#guides/${x.id}" class="${x.id === g.id ? 'on' : ''}">${esc(x.title)}</a>`).join('')}</div>${g.intro ? `<p class="small">${rich(g.intro)}</p>` : ''}${g.plain ? '' : `${K.statBar('stat', 'Items switch to this version')}<p><span class="small">☑ Tick steps as you go. A tick fills in everything above, an untick clears everything below. Early-game ticks carry over to the gear guide. Saved in this browser only</span></p>`}${secs.length > 1 ? subtabs('guides/' + g.id, 'gsec', secs.map(s => [s.h, s.h]), cur) : ''}<div class="card"><h3>${esc(g.title)}${secs.length > 1 ? ' · ' + esc(cur) : ''}</h3>${secs[si].table ? `<div class="tbl"><table><tr>${secs[si].table.columns.map(c => `<th>${esc(c)}</th>`).join('')}</tr>${secs[si].table.rows.map(r => `<tr>${r.map((c, ci) => `<td class="${ci === 0 ? 'num' : ci === 1 ? '' : 'small'}">${ci === 1 ? `<b>${esc(c)}</b>` : esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>` : stepsHtml(secs[si].steps, g.id + ':' + si)}</div>`;
   };
-  const CHANGES = [   /* one entry per GitHub push: Wiki MAJOR.MINOR, every category once, in ORDER; merge new lines into the open version */
-    ['Wiki 1.1 · 23 Sep 2026', [
+  const CHANGES = [   /* one entry per DAY (date only, no version numbers), newest first; every category once, in ORDER; merge same-day lines into that day */
+    ['23 Sep 2026', [
       ['Events', [
         'New Events tab: every event the map can run, live or off, read straight from the map. Live events glow on the Home page.',
         'The current Event Zone is on Home in one line, with its drops and what they turn into on the Events tab. It updates with the map.',
@@ -54,7 +54,7 @@
         'Every ability now shows its in-game icon in a compact list. Tap one for the full tooltip.',
       ]],
       ['Tier list', [
-        'Stages rebuilt: Early = end of the Middle Realm, Mid = end of the Upper Realm, Late = best in slot, and the list now opens on Late. Every stage counts the progression systems (attributes, relics, Potential, Sailing, ability slots, Engraving, Awakening, Dimension Link), each hero with its own best damage picks, shown on its page.',
+        'Stages rebuilt: Early = end of the Middle Realm, Mid = end of the Upper Realm, Late = best in slot, and the list now opens on Late. Every stage counts the progression systems you can reach by then (attributes, relics, Potential, Sailing, ability slots, Engraving, Awakening, Dimension Link), each hero with its own best damage picks, shown on its page. Early skips Attributes and Sailing, Mid skips Sailing and ability Engraving: their stones and voyages only show up later.',
         'New Buffs box: None, Party (the strongest aura of each kind from another hero) or Party + Supporter (full wing and aura collections). Plus a What each stage assumes table and a clearer How this list is made box.',
         'The Tier 1 view is gone because you reach tier 2 fast. Survival stays the hero\'s own kit, the same in every stage.',
         'AoE now counts the real number of monsters a hit reaches, measured from the map\'s spawns, up to a 1500 radius. Wide skills like Abyss\'s 1000-radius hits finally get proper credit.',
@@ -69,6 +69,9 @@
         'Recipes always show enhancement ladders, one compact row each right after the item, so the old toggle is gone. Pet gear reads as two clean ladders, weapon then armor.',
       ]],
       ['Game systems', [
+        'Sailing now says where voyages start: the Voyage Content portal in Arcadia.',
+        'How steps on every system page cut down to the 1-3 rules you won\'t figure out by playing.',
+        'Stat shops: every shop is now listed by its town and zone, and the page has no How box.',
         'Watch out is now Tips: a short gold card with the clever tricks only, checked in the map. Rules moved into the How steps, table repeats are gone.',
         'Fixed on the way: engraving gives real stats (+50,000 all stats per level), there is no single-slot ability roll, slot 4 is supporter only, +25 is an attribute floor, Dimension Link updates with -link, Party Engraving is saved per character.',
         'Attribute enhancement is much easier to read: every step now shows exactly what a failed try does, and the levels you can never drop below are spelled out.',
@@ -91,7 +94,7 @@
         'Tables line up properly, and the Relics, Sailing, Dimension Link and Party dungeon pages got missing details back.',
       ]],
     ]],
-    ['Wiki 1.0 · 22 Sep 2026', [
+    ['22 Sep 2026', [
       ['Tier list', [
         'Rebuilt from the ground up: real gear and bought stats at Early, Mid and Late stages, survival tested against the map\'s own bosses and monster packs.',
         'Solo now needs both survival and damage, Healer means real party healing, and a lifesteal pet option re-ranks every column.',
