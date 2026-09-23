@@ -55,6 +55,7 @@
         'Every ability now shows its in-game icon in a compact list. Tap one for the full tooltip.',
       ]],
       ['Tier list', [
+        'Survival: Strength-based self-heals now count the real share of your HP that Strength gives (gear HP is flat). Fallen Emperor\'s War God Unleashed heals about 17% of max HP, not 20%. Fallen Emperor, Frenzy, Nature and White King score a bit lower and still hold up alone.',
         'Stages rebuilt: Early = end of the Middle Realm, Mid = end of the Upper Realm, Late = best in slot, and the list now opens on Late. Every stage counts the progression systems you can reach by then (attributes, relics, Potential, Sailing, ability slots, Engraving, Awakening, Dimension Link), each hero with its own best damage picks, shown on its page. Early skips Attributes and Sailing, Mid skips Sailing and ability Engraving: their stones and voyages only show up later.',
         'New Buffs box: None, Party (the strongest aura of each kind from another hero) or Party + Supporter (full wing and aura collections). Plus a What each stage assumes table and a clearer How this list is made box.',
         'The Tier 1 view is gone because you reach tier 2 fast. Survival stays the hero\'s own kit, the same in every stage.',
