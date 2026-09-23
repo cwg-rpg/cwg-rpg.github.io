@@ -77,13 +77,13 @@
     const gold = s.track === 'gold'; const ci = gold ? 2 : 1;
     const from = Math.min(24, Math.max(0, Math.round(num(s.from)))); const to = Math.min(25, Math.max(from + 1, Math.round(num(s.to) || 25)));
     const need = C.rows.slice(from, to).reduce((a, r) => a + Number(r[ci]), 0);
-    const di = col(Dg, /Dungeon/), pi = col(Dg, /Contribution per clear/), gi = col(Dg, /gold/i);
+    const di = col(Dg, /Dungeon/), pi = col(Dg, /Contribution per clear/), li = col(Dg, /Lumber per run/);
     const per = r => Number(r[pi]) + (/Snowfield/.test(r[di]) ? 0.2 * (FX.contribution || 1) : 0); /* Snowfield wave 10: 10% chance of +2 (x2 with the Contribution event) */
     return `<p class="small">Contribution for one Permanent Engraving track, and the clears it takes in each party dungeon.</p>
     <div class="card"><div class="kv"><b>Track</b><span>${sel('track', [['stat', 'Life, Balance, Guard, Battle, Move or Haste'], ['gold', 'Gold or Luck']], gold ? 'gold' : 'stat')}</span><b>From level</b><span><input class="calc" data-k="from" type="number" min="0" max="24" value="${from}" style="width:70px"></span><b>To level</b><span><input class="calc" data-k="to" type="number" min="1" max="25" value="${to}" style="width:70px"></span></div></div>
     <div class="card hi"><div class="kv"><b>Contribution needed</b><span>${fmt(need)}</span></div>
-    <div class="tbl compact"><table><tr><th>Dungeon</th><th class="num">Per clear</th><th class="num">Clears</th><th class="num">Est. tickets</th><th class="num">Lumber earned</th></tr>${Dg.rows.map(r => { const n = Math.ceil(need / per(r)); return `<tr><td>${esc(r[di])}</td><td class="num">${nfmt(per(r))}</td><td class="num">${fmt(n)}</td><td class="num">${fmt(Math.ceil(n * 0.9))}</td><td class="num">${fmt(Math.floor(n * Number(r[gi]) / 1e6))}</td></tr>`; }).join('')}</table></div>
-    <p class="small">About 1 ticket in 10 is kept on entry. Lumber earned = the full-run gold of each dungeon at 1,000,000 gold per Lumber, before gold bonuses.</p></div>`;
+    <div class="tbl compact"><table><tr><th>Dungeon</th><th class="num">Per clear</th><th class="num">Clears</th><th class="num">Est. tickets</th><th class="num">Lumber earned</th></tr>${Dg.rows.map(r => { const n = Math.ceil(need / per(r)); return `<tr><td>${esc(r[di])}</td><td class="num">${nfmt(per(r))}</td><td class="num">${fmt(n)}</td><td class="num">${fmt(Math.ceil(n * 0.9))}</td><td class="num">${fmt(Math.floor(n * Number(r[li])))}</td></tr>`; }).join('')}</table></div>
+    <p class="small">About 1 ticket in 10 is kept on entry. Lumber earned = clears x Lumber per run, before gold bonuses.</p></div>`;
   };
 
   /* ---- relic enhancement: expected tries with the reset to +0 ---- */

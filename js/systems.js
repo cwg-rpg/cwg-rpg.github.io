@@ -8,7 +8,8 @@
   const KEYS0 = Object.keys(SY).filter(k => !['unverified', 'rules'].includes(k) && SY[k] && typeof SY[k] === 'object' && !Array.isArray(SY[k]));
   const KEYS = [...KEYS0].sort((a, b) => (SORDER.indexOf(a) + 1 || 99) - (SORDER.indexOf(b) + 1 || 99));
   const cell = c => typeof c === 'object' && c && c.id ? (I[c.id] ? ilink(c.id) : M[c.id] ? mlink(c.id) : esc(c.name)) : esc(c);
-  const table = t => `<h4>${esc(t.title || '')}${(t.events || []).map(x => `<span class="evtag">${esc(x)}</span>`).join('')}</h4>${t.note ? `<p class="small">${esc(t.note)}</p>` : ''}<div class="tbl compact"><table><tr>${(t.columns || []).map(c => `<th>${esc(c)}</th>`).join('')}</tr>${(t.rows || []).map(r => `<tr>${r.map(c => `<td class="${typeof c === 'number' || (c && c.ev) ? 'num' : ''}">${c == null ? '' : typeof c === 'number' ? fmt(c) : K.evCell(c) || cell(c)}</td>`).join('')}</tr>`).join('')}</table></div>`;
+  const table0 = t => `<h4>${esc(t.title || '')}${(t.events || []).map(x => `<span class="evtag">${esc(x)}</span>`).join('')}</h4>${t.note ? `<p class="small">${esc(t.note)}</p>` : ''}<div class="tbl compact"><table><tr>${(t.columns || []).map(c => `<th>${esc(c)}</th>`).join('')}</tr>${(t.rows || []).map(r => `<tr>${r.map(c => `<td class="${typeof c === 'number' || (c && c.ev) ? 'num' : ''}">${c == null ? '' : typeof c === 'number' ? fmt(c) : K.evCell(c) || cell(c)}</td>`).join('')}</tr>`).join('')}</table></div>`;
+  const table = t => t.collapsed ? `<details class="tcol"><summary>${esc(t.title || '')}</summary>${table0(Object.assign({}, t, { title: '' }))}</details>` : table0(t);
   P.systems = (_, f) => {
     if (!KEYS.length) return '<h2>Game systems</h2><p class="small">Not built yet.</p>';
     const k = KEYS.includes(f.sys) ? f.sys : KEYS[0]; const s = SY[k];
@@ -71,8 +72,10 @@
       ['Game systems', [
         'Sailing now says where voyages start: the Voyage Content portal in Arcadia.',
         'How steps on every system page cut down to the 1-3 rules you won\'t figure out by playing.',
-        'Stat shops: every shop is now listed by its town and zone, and the page has no How box.',
+        'Stat shops: one clean table, every shop by town and zone with the Lumber it takes to cap one stat. No How box.',
         'Attribute enhancement Tips: a Progression Route from an endgame player.',
+        'Party dungeons: new Titles table (rank-up chance, Attack Power, bonus hit, ticket keep chance per rank), one Dungeons table with ticket realm, Lumber per run and boss drops, and Engraving tracks show the Contribution to reach level 25.',
+        'Awakening: every boss in the table links to its page.',
         'Fewer Tips, real tricks only: Ability slots, Potential, Awakening, Party dungeons and Primordial relics lost the ones that weren\'t. Sailing\'s group-up rule moved into How.',
         'Watch out is now Tips: a short gold card with the clever tricks only, checked in the map. Rules moved into the How steps, table repeats are gone.',
         'Fixed on the way: engraving gives real stats (+50,000 all stats per level), there is no single-slot ability roll, slot 4 is supporter only, +25 is an attribute floor, Dimension Link updates with -link, Party Engraving is saved per character.',
@@ -84,6 +87,7 @@
         'Lumipaca got a portrait worthy of its legend.',
       ]],
       ['Calculators', [
+        'Engraving: Lumber earned comes straight from the new Lumber per run column.',
         'Roll odds works again for all three roll systems and counts the real Reroll All price for ability slots. The attribute calculator now treats +25 as a floor.',
         'Relic enhancement works again (it showed broken numbers) and lists every step with its reset chance. Roll odds no longer breaks on Normal or better.',
         'Drop chance: new Pick an item mode lists every monster that drops it, best first. Items with several rolls per kill now count every roll.',
