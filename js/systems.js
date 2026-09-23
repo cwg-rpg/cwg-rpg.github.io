@@ -80,7 +80,7 @@
       ]],
       ['Calculators', [
         'Roll odds works again for all three roll systems and counts the real Reroll All price for ability slots. The attribute calculator now treats +25 as a floor.',
-        'Relic enhancement works again (it showed broken numbers) and lists every step with its reset chance.',
+        'Relic enhancement works again (it showed broken numbers) and lists every step with its reset chance. Roll odds no longer breaks on Normal or better.',
         'Drop chance: new Pick an item mode lists every monster that drops it, best first. Items with several rolls per kill now count every roll.',
         'Attribute enhancement: a Destruction Protection switch adds the protection Lumber and turns destroys into stay or drop 1.',
         'Potential odds count the cheap way: ALL with nothing locked, 1 Lumber for all free slots. Costs are shown in Lumber, the endgame currency, and every calculator says what it answers.',

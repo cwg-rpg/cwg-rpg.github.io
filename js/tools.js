@@ -58,7 +58,7 @@
     const k = grades.findIndex(g => g[0] === tgt); const p1 = grades.slice(k).reduce((a, g) => a + g[1], 0) / 100; const p = cost === 'gold' ? 1 - Math.pow(1 - p1, AB_OPEN) : cost === 'all' ? 1 - Math.pow(1 - p1, POT_OPEN) : p1;
     const pity = sys === 'sailing';
     const expRolls = p > 0 ? (pity ? (1 - Math.pow(1 - p, PITY)) / p : 1 / p) : Infinity;
-    const q = x => { const n = Math.ceil(Math.log(1 - x) / Math.log(1 - p)); return pity ? Math.min(n, PITY) : n; };
+    const q = x => { if (p >= 1) return 1; const n = Math.ceil(Math.log(1 - x) / Math.log(1 - p));   /* a 100% grade (e.g. Normal or better) sums to a hair over 1 */ return pity ? Math.min(n, PITY) : n; };
     const unlucky = q(0.9);
     let lum = n => 0, extra = null;
     const gold = AB_TRY * (FX.ability_gold || 1);
