@@ -62,6 +62,7 @@ window.WK = (function () {
     const y0 = window.scrollY;
     if (page.includes('?')) { const [p, qs] = page.split('?'); page = p; Object.assign(filters, Object.fromEntries(new URLSearchParams(qs))); history.replaceState(null, '', '#' + page + (rest ? '/' + rest : '')); }
     const f = { ...filters };
+    document.body.dataset.page = P[page] ? page : 'home';   /* full banner on Home only (CSS) */
     document.querySelectorAll('nav.tabs a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + page));
     const fn = P[page] || P.home; out.innerHTML = fn(id, f);
     out.querySelectorAll('.sub-tabs a[data-f]').forEach(a => a.addEventListener('click', ev => { ev.preventDefault(); const [k, v] = a.dataset.f.split('='); filters[k] = decodeURIComponent(v); route(); }));

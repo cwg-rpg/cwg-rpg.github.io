@@ -45,13 +45,21 @@
   };
   const CHANGES = [   /* one entry per DAY (date only, no version numbers), newest first; every category once, in ORDER; merge same-day lines into that day */
     ['24 Sep 2026', [
+      ['Heroes', [
+        'New Heroes tab: three columns by main stat with compact cards, role tags in colour, a star for supporter heroes, and Free / Supporter / role filters. No more long table.',
+        'Hero pages are much shorter: Damage, Utility and Survival scores fold into one line each, and a transformation folds into one card with the same ability rows as the kit.',
+      ]],
       ['Tier list', [
+        'No more supporter tag on the tier list. Use Free heroes only, or open the hero page.',
         'Armor shred reworked. Bosses have 3,000 to 21,000+ armor that blocks over 99% of every hero\'s damage, so -10% armor is about +11% damage for the whole party. Shredders score it in Utility and in their own Boss and AoE damage.',
         'Utility counts every damage effect by the real party damage it adds: armor shred, attack-speed auras, and damage auras (those only boost basic attacks, so they count less than before).',
         'Different shred auras stack, so the Party setting now adds every other hero\'s shred. Late gear\'s Nirvahel gem (-8% armor) and a Sailing Armor Weakening slot count too.',
+        'Utility grades now rank only heroes with a party effect, and armor shred counts on top of the gem and Sailing shred a party already has (about +14% damage per -10% late). Shredders move up to A.',
+        'New tier board: heroes in S to D rows for the ranking you pick (Solo, Boss, AoE, AFK, Utility, Survival). The table with every score is one click away.',
       ]],
       ['Whole wiki', [
         'The header now shows the date the wiki was last updated.',
+        'The big banner is only on Home. Every other page gets a slim one, so content starts higher.',
       ]],
     ]],
     ['23 Sep 2026', [
