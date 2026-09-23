@@ -50,6 +50,9 @@
         'Utility counts every damage effect by the real party damage it adds: armor shred, attack-speed auras, and damage auras (those only boost basic attacks, so they count less than before).',
         'Different shred auras stack, so the Party setting now adds every other hero\'s shred. Late gear\'s Nirvahel gem (-8% armor) and a Sailing Armor Weakening slot count too.',
       ]],
+      ['Whole wiki', [
+        'The header now shows the date the wiki was last updated.',
+      ]],
     ]],
     ['23 Sep 2026', [
       ['Events', [

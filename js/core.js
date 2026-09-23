@@ -80,6 +80,8 @@ window.WK = (function () {
   /* come back to the same page after the viewer reloads the wiki (a republish reloads every open copy) */
   const LAST = 'cwgLast'; const saveLast = () => { try { localStorage.setItem(LAST, JSON.stringify({ h: location.hash, f: filters, y: window.scrollY, t: Date.now() })); } catch (e) { } };
   function start() {
+    const upd = document.getElementById('upd'), mu = (window.CWG.meta || {}).updated;   // "Updated <newest changelog date>" in the header
+    if (upd && mu) upd.textContent = ' · Wiki updated ' + mu;
     try { const s = JSON.parse(localStorage.getItem(LAST) || 'null'); if (s && !location.hash && s.h && Date.now() - s.t < 30 * 60 * 1000) { Object.assign(filters, s.f || {}); history.replaceState(null, '', s.h); setTimeout(() => window.scrollTo(0, s.y || 0), 50); } } catch (e) { }
     window.addEventListener('scroll', () => { clearTimeout(window._cwgT); window._cwgT = setTimeout(saveLast, 300); }, { passive: true });
     window.addEventListener('pagehide', saveLast);
