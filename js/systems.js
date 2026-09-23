@@ -8,14 +8,24 @@
   const KEYS0 = Object.keys(SY).filter(k => !['unverified', 'rules'].includes(k) && SY[k] && typeof SY[k] === 'object' && !Array.isArray(SY[k]));
   const KEYS = [...KEYS0].sort((a, b) => (SORDER.indexOf(a) + 1 || 99) - (SORDER.indexOf(b) + 1 || 99));
   const cell = c => typeof c === 'object' && c && c.id ? (I[c.id] ? ilink(c.id) : M[c.id] ? mlink(c.id) : esc(c.name)) : esc(c);
-  const table = t => `<h4>${esc(t.title || '')}</h4>${t.note ? `<p class="small">${esc(t.note)}</p>` : ''}<div class="tbl compact"><table><tr>${(t.columns || []).map(c => `<th>${esc(c)}</th>`).join('')}</tr>${(t.rows || []).map(r => `<tr>${r.map(c => `<td class="${typeof c === 'number' ? 'num' : ''}">${c == null ? '' : typeof c === 'number' ? fmt(c) : cell(c)}</td>`).join('')}</tr>`).join('')}</table></div>`;
+  const table = t => `<h4>${esc(t.title || '')}${(t.events || []).map(x => `<span class="evtag">${esc(x)}</span>`).join('')}</h4>${t.note ? `<p class="small">${esc(t.note)}</p>` : ''}<div class="tbl compact"><table><tr>${(t.columns || []).map(c => `<th>${esc(c)}</th>`).join('')}</tr>${(t.rows || []).map(r => `<tr>${r.map(c => `<td class="${typeof c === 'number' || (c && c.ev) ? 'num' : ''}">${c == null ? '' : typeof c === 'number' ? fmt(c) : K.evCell(c) || cell(c)}</td>`).join('')}</tr>`).join('')}</table></div>`;
   P.systems = (_, f) => {
     if (!KEYS.length) return '<h2>Game systems</h2><p class="small">Not built yet.</p>';
     const k = KEYS.includes(f.sys) ? f.sys : KEYS[0]; const s = SY[k];
     const head = `<h2>Game systems</h2>${subtabs('systems', 'sys', KEYS.map(x => [x, s && SY[x].title || NAMES[x] || x.replace(/_/g, ' ')]), k)}`;
     const shops = k === 'stat_shop' ? `<p>Stock and prices: ${W.zones.filter(z => (z.shops || []).length).map(z => link('zone', z.id, z.name)).join(' · ')}.</p>` : '';
-    if (s.how) return `${head}<h3>${esc(s.title || NAMES[k] || k)}</h3><p>${esc(s.what || '')}${s.open ? ` <span class="small">· ${esc(s.open)}</span>` : ''}</p><div class="sys-grid"><div class="card"><h4 style="margin-top:0">How</h4><ol>${(s.how || []).map(x => `<li>${esc(x)}</li>`).join('')}</ol></div>${(s.tips || []).length ? `<div class="card"><h4 style="margin-top:0">Watch out</h4><ul>${s.tips.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}</div>${shops}${(s.items || []).length ? `<p class="small">Items: ${gen(s.items)}</p>` : ''}${(s.monsters || []).length ? `<p class="small">Bosses: ${gen(s.monsters)}</p>` : ''}${(s.tables || []).map(table).join('')}`;
+    if (s.how) return `${head}<h3>${esc(s.title || NAMES[k] || k)}</h3><p>${esc(s.what || '')}${s.open ? ` <span class="small">· ${esc(s.open)}</span>` : ''}</p>${(s.live || []).length ? `<div class="evstrip small-strip"><span class="evl"><span class="evdot"></span>Live event</span>${s.live.map(e => `<div><a class="evchip" href="#events">${esc(e.chip)}</a> <span class="evw">${esc(e.what)}</span></div>`).join('')}</div>` : ''}<div class="sys-grid${(s.tips || []).length ? '' : ' one'}"><div class="card"><h4 style="margin-top:0">How</h4><ol>${(s.how || []).map(x => `<li>${esc(x)}</li>`).join('')}</ol></div>${(s.tips || []).length ? `<div class="card tips"><h4 style="margin-top:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>Tips</h4><ul>${s.tips.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}</div>${shops}${(s.items || []).length ? `<p class="small">Items: ${gen(s.items)}</p>` : ''}${(s.monsters || []).length ? `<p class="small">Bosses: ${gen(s.monsters)}</p>` : ''}${(s.tables || []).map(table).join('')}`;
     return `${head}<h3>${esc(NAMES[k] || k)}</h3><p>${esc(s.summary || '')}</p>${(s.rules || []).length ? `<ul>${s.rules.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}${shops}${(s.items || []).length ? `<p>Items: ${gen(s.items)}</p>` : ''}${(s.tables || []).map(table).join('')}`;
+  };
+  /* ---- events (read from the map at build time) ---- */
+  P.events = () => {
+    const E = W.events || []; const on = E.filter(e => e.on), off = E.filter(e => !e.on);
+    const where = e => (e.links || []).map(l => `<a href="#${l[0]}">${esc(l[1])}</a>`).join(' · ');
+    const card = e => `<div class="card ${e.on ? 'evon' : 'evoff'}"><h3>${esc(e.name)}${e.on ? '<span class="evtag">Live</span>' : ''}</h3><p>${esc(e.what)}</p>${(e.links || []).length ? `<p class="small">${e.on ? 'Boosted values shown on' : 'Changes'}: ${where(e)}</p>` : ''}</div>`;
+    return `<h2>Events</h2><p class="small">Events are switched on by the map maker in each map version. Tables across the wiki show the event value in <span class="evv">gold</span> with the normal value <span class="evb" style="margin:0">crossed out</span>.</p>`
+      + (K.ezLine && K.ezLine() ? `<div class="evstrip col">${K.ezLine()}</div>` : '')
+      + (on.length ? `<h3>Live now (${on.length})</h3><div class="evgrid">${on.map(card).join('')}</div>` : '<p>No events are live in this map version.</p>')
+      + (off.length ? `<h3>Off in this map version (${off.length})</h3><div class="evgrid">${off.map(card).join('')}</div>` : '');
   };
   /* ---- guides (verified progression + Stoner's route) ---- */
   P.guides = id => {
@@ -32,28 +42,44 @@
     const si = secs.findIndex(s => s.h === cur);
     return `<h2>Guides</h2>${K.profileBar()}<div class="sub-tabs">${G.map(x => `<a href="#guides/${x.id}" class="${x.id === g.id ? 'on' : ''}">${esc(x.title)}</a>`).join('')}</div>${g.intro ? `<p class="small">${rich(g.intro)}</p>` : ''}${g.plain ? '' : `${K.statBar('stat', 'Items switch to this version')}<p><span class="small">☑ Tick steps as you go. A tick fills in everything above, an untick clears everything below. Early-game ticks carry over to the gear guide. Saved in this browser only</span></p>`}${secs.length > 1 ? subtabs('guides/' + g.id, 'gsec', secs.map(s => [s.h, s.h]), cur) : ''}<div class="card"><h3>${esc(g.title)}${secs.length > 1 ? ' · ' + esc(cur) : ''}</h3>${secs[si].table ? `<div class="tbl"><table><tr>${secs[si].table.columns.map(c => `<th>${esc(c)}</th>`).join('')}</tr>${secs[si].table.rows.map(r => `<tr>${r.map((c, ci) => `<td class="${ci === 0 ? 'num' : ci === 1 ? '' : 'small'}">${ci === 1 ? `<b>${esc(c)}</b>` : esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>` : stepsHtml(secs[si].steps, g.id + ':' + si)}</div>`;
   };
-  const CHANGES = [
-    ['23 Sep 2026', [
-      ['Game systems', [
-        'Attribute enhancement is much easier to read: every step now shows exactly what a failed try does, and the levels you can never drop below are spelled out.',
-      ]],
-      ['Items', [
-        'Taegeuk Guardian Aura is now its own Aura type with a plain explanation of how it works. Its upgrade recipes list every material, and Next points to the next level.',
-        'Recipes always show enhancement ladders, one compact row each right after the item, so the old toggle is gone. Pet gear reads as two clean ladders, weapon then armor.',
+  const CHANGES = [   /* one entry per GitHub push: Wiki MAJOR.MINOR, every category once, in ORDER; merge new lines into the open version */
+    ['Wiki 1.1 · 23 Sep 2026', [
+      ['Events', [
+        'New Events tab: every event the map can run, live or off, read straight from the map. Live events glow on the Home page.',
+        'The current Event Zone is on Home in one line, with its drops and what they turn into on the Events tab. It updates with the map.',
+        'Tables follow the live events. Boosted values show in gold with the normal value crossed out: recipes, Awakening, Attribute enhancement, Potential, Sailing and the calculators. A new map version that flips an event updates the wiki on its own.',
       ]],
       ['Heroes', [
         'Brand-new hero pages: a summary card with rank chips, then Tier 2, Tier 1 and How it\'s scored tabs. No more endless scrolling.',
         'Every ability now shows its in-game icon in a compact list. Tap one for the full tooltip.',
       ]],
       ['Tier list', [
+        'Stages rebuilt: Early = end of the Middle Realm, Mid = end of the Upper Realm, Late = best in slot, and the list now opens on Late. Every stage counts the progression systems (attributes, relics, Potential, Sailing, ability slots, Engraving, Awakening, Dimension Link), each hero with its own best damage picks, shown on its page.',
+        'New Buffs box: None, Party (the strongest aura of each kind from another hero) or Party + Supporter (full wing and aura collections). Plus a What each stage assumes table and a clearer How this list is made box.',
+        'The Tier 1 view is gone because you reach tier 2 fast. Survival stays the hero\'s own kit, the same in every stage.',
+        'AoE now counts the real number of monsters a hit reaches, measured from the map\'s spawns, up to a 1500 radius. Wide skills like Abyss\'s 1000-radius hits finally get proper credit.',
+        'Each hero\'s How it\'s scored tab shows every ability\'s radius and how many monsters it hits.',
         'Smarter Utility: party protection counts most, then damage buffs and armor shred, then attack speed, then healing. Nature\'s taunt finally gets its due.',
         'The Tank column is now Survival, a pure measure of how long a hero stays alive. Tank is now the role of the one taunter, Nature, and the other sturdy heroes are Offtanks.',
         'Fresh hand-written notes, survival lines and role lines for all 26 heroes.',
         'Cleaner tags: knockbacks, pulls and stuns no longer count as debuffs, and "Only hero with" chips highlight what makes a hero unique.',
       ]],
+      ['Items', [
+        'Taegeuk Guardian Aura is now its own Aura type with a plain explanation of how it works. Its upgrade recipes list every material, and Next points to the next level.',
+        'Recipes always show enhancement ladders, one compact row each right after the item, so the old toggle is gone. Pet gear reads as two clean ladders, weapon then armor.',
+      ]],
+      ['Game systems', [
+        'Watch out is now Tips: a short gold card with the clever tricks only, checked in the map. Rules moved into the How steps, table repeats are gone.',
+        'Fixed on the way: engraving gives real stats (+50,000 all stats per level), there is no single-slot ability roll, slot 4 is supporter only, +25 is an attribute floor, Dimension Link updates with -link, Party Engraving is saved per character.',
+        'Attribute enhancement is much easier to read: every step now shows exactly what a failed try does, and the levels you can never drop below are spelled out.',
+        'Ability slots and Potential: the preset reroll trick, checked in the map. Save, reroll everything at base cost, load back if it rolls worse.',
+      ]],
       ['Pets', [
         'Pets tab rebuilt from scratch: in-game icons, Hero bonus and While summoned side by side, evolved and full-set values in every row.',
         'Lumipaca got a portrait worthy of its legend.',
+      ]],
+      ['Calculators', [
+        'Roll odds works again for all three roll systems and counts the real Reroll All price for ability slots. The attribute calculator now treats +25 as a floor.',
       ]],
       ['Whole wiki', [
         'Two full wording passes over every tab: shorter, clearer, written like a player would say it, with nothing left out.',
@@ -61,14 +87,10 @@
         'Tables line up properly, and the Relics, Sailing, Dimension Link and Party dungeon pages got missing details back.',
       ]],
     ]],
-    ['22 Sep 2026', [
-      ['Planner', [
-        'New "Where to farm next" page: pick what you wear and get one clear next step per slot, with exactly which monster to farm and about how many kills it takes.',
-        'Profiles keep separate gear, main stat and checklist progress for every character you play.',
-        'A clear STR / AGI / INT switch sits on top of the planner and the checklists, and hides once set.',
-      ]],
-      ['Guides', [
-        'Complete gear checklists for every slot, from the first piece to the last enhancement, with every material and where it drops.',
+    ['Wiki 1.0 · 22 Sep 2026', [
+      ['Tier list', [
+        'Rebuilt from the ground up: real gear and bought stats at Early, Mid and Late stages, survival tested against the map\'s own bosses and monster packs.',
+        'Solo now needs both survival and damage, Healer means real party healing, and a lifesteal pet option re-ranks every column.',
       ]],
       ['Game systems', [
         'Party dungeons now cover Contribution and Permanent Engraving: every track and the cost of each level.',
@@ -76,9 +98,13 @@
       ['Calculators', [
         'New calculators: roll odds for Ability, Potential and Sailing slots, Engraving cost in party dungeon clears, and Relic enhancement.',
       ]],
-      ['Tier list', [
-        'Rebuilt from the ground up: real free gear and bought stats at Early, Mid and Late stages, survival tested against the map\'s own bosses and monster packs.',
-        'Solo now needs both survival and damage, Healer means real party healing, and a lifesteal pet option re-ranks every column.',
+      ['Planner', [
+        'New "Where to farm next" page: pick what you wear and get one clear next step per slot, with exactly which monster to farm and about how many kills it takes.',
+        'Profiles keep separate gear, main stat and checklist progress for every character you play.',
+        'A clear STR / AGI / INT switch sits on top of the planner and the checklists, and hides once set.',
+      ]],
+      ['Guides', [
+        'Complete gear checklists for every slot, from the first piece to the last enhancement, with every material and where it drops.',
       ]],
     ]],
   ];

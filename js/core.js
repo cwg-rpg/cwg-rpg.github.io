@@ -21,7 +21,7 @@ window.WK = (function () {
   const zlink = id => { const z = Z[id]; return z ? link('zone', id, z.name) + ` <span class="small">(${esc(z.realm)})</span>` : esc(id || ''); };
 
   /* ---- recipes ---- */
-  const rrow = r => `<tr><td>${ilink(r.out)}</td><td class="small">${r.in.map(([k, n]) => (n > 1 ? fmt(n) + '× ' : '') + ilink(k)).join(' + ')}</td><td class="num">${(r.chance_eff != null ? r.chance_eff : r.chance) != null ? pct(r.chance_eff != null ? r.chance_eff : r.chance) : ''}</td><td class="small">${esc(r.kind)}</td></tr>`;
+  const rrow = r => `<tr><td>${ilink(r.out)}</td><td class="small">${r.in.map(([k, n]) => (n > 1 ? fmt(n) + '× ' : '') + ilink(k)).join(' + ')}</td><td class="num">${chanceHtml(r)}</td><td class="small">${esc(r.kind)}</td></tr>`;
   const rtable = rs => rs.length ? `<div class="tbl"><table><tr><th>Result</th><th>Materials</th><th class="num">Success</th><th>Kind</th></tr>${rs.map(rrow).join('')}</table></div>` : '';
 
   /* ---- generic renderer for findings prose (dict/list/string) ---- */
@@ -51,6 +51,9 @@ window.WK = (function () {
     out.innerHTML = `<h2>Search: ${esc(q)}</h2>${note}` + Object.keys(KL).filter(k => g[k]).map(k => `<h3>${KL[k]}</h3>` + g[k].map(h => `<div class="hit"><a href="#${h.e.k}/${encodeURIComponent(h.e.id)}">${h.e.k === 'item' ? icon(h.e.id) : ''}${esc(h.e.t)}</a> <span class="small">${esc(String(h.e.s || '').split(' · ')[0]).slice(0, 40)}</span></div>`).join('')).join('');
   }
 
+  /* event-adjusted value: {ev: event value, b: base value, u: unit} */
+  const evCell = c => c && typeof c === 'object' && 'ev' in c ? `<span class="evv">${typeof c.ev === 'number' ? fmt(c.ev) : esc(c.ev)}${esc(c.u || '')}</span><span class="evb">${typeof c.b === 'number' ? fmt(c.b) : esc(c.b)}${esc(c.u || '')}</span>` : '';
+  const chanceHtml = r => r.chance == null ? '' : r.chance_base != null ? `<span class="evv">${pct(r.chance)}</span><span class="evb">${pct(r.chance_base)}</span>` : pct(r.chance);
   /* ---- router ---- */
   const P = {}; const filters = {}; const hooks = [];
   let lastView = '';
@@ -134,5 +137,5 @@ window.WK = (function () {
   let VARMAP = null;
   const varKey = it => { const base = k => { const x = I[k]; return x ? (x.variant ? (x.family || x.name) : x.name) : k; }; const r = madeBy(it.id)[0]; const sig = r ? 'R:' + r.in.map(([k]) => base(k)).sort().join('+') : 'D:' + [...new Set((it.drops || []).map(x => x.m))].sort().join(','); return it.family + '|' + it.type + '|' + (it.level || 0) + '|' + sig; };
   const swapVar = (id, stat) => { const it = I[id]; if (!it || !it.variant || !stat || it.variant === stat) return id; if (!VARMAP) { VARMAP = {}; for (const x of Object.values(I)) if (x.variant) (VARMAP[varKey(x)] = VARMAP[varKey(x)] || {})[x.variant] = x.id; } const v = VARMAP[varKey(it)]; return v && v[stat] ? v[stat] : id; };
-  return { statBar, profileBar, swapVar, GEAR_TYPES, W, I, M, R, Z, $, esc, link, fmt, pct, tag, icon, iname, ilink, statLine, tipHtml, madeBy, usedIn, mlink, zlink, rrow, rtable, gen, INDEX, KL, P, filters, hooks, route, start, subtabs, filterBox, tbl };
+  return { evCell, chanceHtml, statBar, profileBar, swapVar, GEAR_TYPES, W, I, M, R, Z, $, esc, link, fmt, pct, tag, icon, iname, ilink, statLine, tipHtml, madeBy, usedIn, mlink, zlink, rrow, rtable, gen, INDEX, KL, P, filters, hooks, route, start, subtabs, filterBox, tbl };
 })();

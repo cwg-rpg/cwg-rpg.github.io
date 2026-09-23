@@ -21,49 +21,52 @@
 
 
   /* ---- shared: read the verified tables from the Game Systems pages, so a rebuild keeps these in sync ---- */
-  const tbl = (sys, re) => ((SY[sys] || {}).tables || []).find(x => re.test(x.title)) || null;
+  const unev = c => c && typeof c === 'object' && 'ev' in c ? c.ev : c; /* event cells {ev, b}: calculators use the live value */
+  const tbl = (sys, re) => { const T = ((SY[sys] || {}).tables || []).find(x => re.test(x.title)); return T ? { ...T, rows: T.rows.map(r => r.map(unev)) } : null; };
+  const FX = W.event_fx || {};
+  const EV_TOOL = { enh: ['craft', 'attribute_x3', 'attribute_x2', 'attribute_lumber_half'], roll: ['ability_top3', 'ability_high2', 'ability_halfcost', 'potential_top3', 'potential_halfcost', 'sailing_top2'], engr: ['party_contribution2', 'party_bonus_gold'] };
+  const evNote = tool => { const on = (W.events || []).filter(e => e.on && (EV_TOOL[tool] || []).includes(e.id)); return on.length ? `<p class="small">Live events included: ${on.map(e => `<a class="evchip" href="#events">${esc(e.chip)}</a>`).join(' ')}</p>` : ''; };
   const col = (T, re) => T ? T.columns.findIndex(c => re.test(c)) : -1;
   const sel = (k, opts, v) => `<select class="calc" data-k="${k}">${opts.map(([val, lab]) => `<option value="${esc(val)}" ${String(val) === String(v) ? 'selected' : ''}>${esc(lab)}</option>`).join('')}</select>`;
   const nfmt = x => x > 0 && x < 1 ? String(+x.toPrecision(2)) : x >= 1e6 ? fmt(Math.round(x)) : fmt(Math.round(x * 10) / 10);
 
   /* ---- roll odds: Ability slots, Potential, Sailing Potential ---- */
   const ROLL = [
-    ['ability_slots', 'Ability slot', /grade chances/i, 'A roll costs gold by the slot\'s current grade: Normal 10,000, Magic 50,000, Rare 100,000, Epic 150,000, Unique and up 200,000. Starts from Normal. Every 1,000,000 gold is 1 Lumber.', 'gold'],
-    ['potential', 'Potential slot', /grade chances/i, '', [['Lumber', 1]]],
-    ['sailing', 'Sailing Potential slot', /grade chances/i, '', [['Voyage Essence', 1], ['Lumber', 2]]],
+    ['ability_slots', 'Ability slots', /grade/i, '', 'gold'],
+    ['potential', 'Potential slot', /grade/i, '', [['Lumber', 1]]],
+    ['sailing', 'Sailing Potential slot', /grade/i, '', [['Voyage Essence', 1], ['Lumber', 2]]],
   ];
-  const AB_GOLD = [10000, 50000, 100000, 150000]; /* map: roll cost by current grade 1-4, then 200,000 */
-  const abGold = g => AB_GOLD[g] != null ? AB_GOLD[g] : 200000;
+  const AB_TRY = 10000, AB_OPEN = 3; /* map: Reroll All with nothing kept costs 10,000 gold and rolls every open slot (3 free slots) */
   const PITY = 50000; /* sailing: every 50,000 Voyage Essence spent guarantees a Divinity roll (1 essence per roll) */
   const roll = () => {
     const s = state.roll; const sysI = Math.max(0, ROLL.findIndex(r => r[0] === s.sys)); const [sys, label, re, note, cost] = ROLL[sysI];
     const T = tbl(sys, re); if (!T) return '<p class="small">No data.</p>';
     const gi = col(T, /^Grade$/), ci = col(T, /Chance/); const grades = T.rows.map(r => [r[gi], Number(r[ci])]);
     const tgt = grades.some(g => g[0] === s.g) ? s.g : grades[Math.min(5, grades.length - 1)][0];
-    const k = grades.findIndex(g => g[0] === tgt); const p = grades.slice(k).reduce((a, g) => a + g[1], 0) / 100;
+    const k = grades.findIndex(g => g[0] === tgt); const p1 = grades.slice(k).reduce((a, g) => a + g[1], 0) / 100; const p = cost === 'gold' ? 1 - Math.pow(1 - p1, AB_OPEN) : p1;
     const pity = sys === 'sailing';
     const expRolls = p > 0 ? (pity ? (1 - Math.pow(1 - p, PITY)) / p : 1 / p) : Infinity;
     const q = x => { const n = Math.ceil(Math.log(1 - x) / Math.log(1 - p)); return pity ? Math.min(n, PITY) : n; };
     const unlucky = q(0.9);
     let lum = n => 0, extra = null;
-    if (cost === 'gold') { const below = grades.slice(0, k); const pb = below.reduce((a, g) => a + g[1], 0); const avgG = pb > 0 ? below.reduce((a, g, i) => a + g[1] * abGold(i), 0) / pb : abGold(0); lum = n => n <= 0 ? 0 : (abGold(0) + (n - 1) * avgG) / 1e6; }
-    else if (sys === 'potential') lum = n => n;
+    const gold = AB_TRY * (FX.ability_gold || 1);
+    if (sys === 'potential') lum = n => n;
     else if (sys === 'sailing') { lum = n => 2 * n; extra = n => ` + ${nfmt(n)} Voyage Essence`; }
-    const line = n => `<b>${nfmt(lum(n))} Lumber</b>${extra ? extra(n) : ''} <span class="small">· ${nfmt(n)} rolls</span>`;
+    const line = n => cost === 'gold' ? `<b>${fmt(Math.round(n * gold))} gold</b> <span class="small">· ${nfmt(n)} Reroll All presses</span>` : `<b>${nfmt(lum(n))} Lumber</b>${extra ? extra(n) : ''} <span class="small">· ${nfmt(n)} rolls</span>`;
     return `<div class="card"><div class="kv"><b>Roll</b><span>${sel('sys', ROLL.map(r => [r[0], r[1]]), sys)}</span><b>Until</b><span>${sel('g', grades.map(g => [g[0], g[0] + ' or better']), tgt)}</span></div></div>
     <div class="card hi"><div class="kv"><b>Usually</b><span>${line(expRolls)}</span><b>If unlucky</b><span>${line(unlucky)}</span></div>
-    <p class="small" style="margin:8px 0 0">"If unlucky": only 1 player in 10 needs more.${pity ? ` Every ${fmt(PITY)} Voyage Essence spent guarantees Divinity, so ${fmt(PITY)} rolls at most.` : ''}${cost === 'gold' ? ' Paid in gold, shown as Lumber at 1,000,000 gold each.' : ''}</p></div>`;
+    <p class="small" style="margin:8px 0 0">"If unlucky": only 1 player in 10 needs more.${pity ? ` Every ${fmt(PITY)} Voyage Essence spent guarantees Divinity, so ${fmt(PITY)} rolls at most.` : ''}${cost === 'gold' ? ` Each press is a Reroll All with nothing equipped or protected: ${fmt(gold)} gold, all ${AB_OPEN} free slots roll at once.` : ''}</p></div>`;
   };
 
   /* ---- engraving: contribution and party dungeon clears ---- */
   const engr = () => {
-    const s = state.engr; const C = tbl('party_dungeon', /Contribution cost/), Dg = tbl('party_dungeon', /^Dungeons$/);
+    const s = state.engr; const C = tbl('party_dungeon', /Contribution cost|cost in Contribution/), Dg = tbl('party_dungeon', /^Dungeons$/);
     if (!C || !Dg) return '<p class="small">No data.</p>';
     const gold = s.track === 'gold'; const ci = gold ? 2 : 1;
     const from = Math.min(24, Math.max(0, Math.round(num(s.from)))); const to = Math.min(25, Math.max(from + 1, Math.round(num(s.to) || 25)));
     const need = C.rows.slice(from, to).reduce((a, r) => a + Number(r[ci]), 0);
     const di = col(Dg, /Dungeon/), pi = col(Dg, /Contribution per clear/), gi = col(Dg, /gold/i);
-    const per = r => Number(r[pi]) + (/Snowfield/.test(r[di]) ? 0.2 : 0); /* Snowfield wave 10: 10% chance of +2 */
+    const per = r => Number(r[pi]) + (/Snowfield/.test(r[di]) ? 0.2 * (FX.contribution || 1) : 0); /* Snowfield wave 10: 10% chance of +2 (x2 with the Contribution event) */
     return `<p class="small">Contribution for one Permanent Engraving track, and the clears it takes in each party dungeon.</p>
     <div class="card"><div class="kv"><b>Track</b><span>${sel('track', [['stat', 'Life, Balance, Guard, Battle, Move or Haste'], ['gold', 'Gold or Luck']], gold ? 'gold' : 'stat')}</span><b>From level</b><span><input class="calc" data-k="from" type="number" min="0" max="24" value="${from}" style="width:70px"></span><b>To level</b><span><input class="calc" data-k="to" type="number" min="1" max="25" value="${to}" style="width:70px"></span></div></div>
     <div class="card hi"><div class="kv"><b>Contribution needed</b><span>${fmt(need)}</span></div>
@@ -99,18 +102,18 @@
     } else {
       const A = CALC.attribute || []; const from = Math.min(39, Math.max(0, num(s.afrom))); const to = Math.min(40, Math.max(from + 1, num(s.ato) || 40));
       // expected stones / lumber from level l to reach 'to': E[l] = cost + keep*E[l] + s*E[l+1] + d1*E[down1] + d2*E[down2]; floor = highest safe multiple of 5 reached
-      const floorOf = l => { let f = 0; for (let x = 0; x <= l; x++) if (A[x] && A[x].safe) f = x; return f; };
-      const solve = costKey => { const E = new Array(41).fill(0); for (let it = 0; it < 4000; it++) { for (let l = to - 1; l >= from; l--) { const r = A[l]; if (!r) continue; const dn1 = Math.max(floorOf(l), l - 1), dn2 = Math.max(floorOf(l), l - 2); const c = r[costKey] || 0; const keep = r.keep / 100, sp = r.s / 100, p1 = r.safe ? 0 : r.d1 / 100, p2 = r.safe ? 0 : r.d2 / 100; const kp = r.safe ? 1 - sp : keep; E[l] = (c + sp * E[l + 1] + p1 * E[dn1 < from ? from : dn1] + p2 * E[dn2 < from ? from : dn2]) / (1 - kp); } } return E[from]; };
+      const floorOf = l => l - l % 5; /* a fail never drops below the last multiple of 5 */ const isSafe = r => r.safe || (r.lv >= 10 && r.lv % 5 === 0);
+      const solve = costKey => { const E = new Array(41).fill(0); for (let it = 0; it < 4000; it++) { for (let l = to - 1; l >= from; l--) { const r = A[l]; if (!r) continue; const dn1 = Math.max(floorOf(l), l - 1), dn2 = Math.max(floorOf(l), l - 2); const c = r[costKey] || 0; const keep = r.keep / 100, sp = r.s / 100, p1 = isSafe(r) ? 0 : r.d1 / 100, p2 = isSafe(r) ? 0 : r.d2 / 100; const kp = isSafe(r) ? 1 - sp : keep; E[l] = (c + sp * E[l + 1] + p1 * E[dn1 < from ? from : dn1] + p2 * E[dn2 < from ? from : dn2]) / (1 - kp); } } return E[from]; };
       const st = solve('stones'), lu = solve('lumber');
       body = mode === 'relic' ? relic(s) : `<div class="card"><div class="kv"><b>From</b><span><input class="calc" data-k="afrom" type="number" min="0" max="39" value="${from}" style="width:70px"></span><b>To</b><span><input class="calc" data-k="ato" type="number" min="1" max="40" value="${to}" style="width:70px"></span></div></div>
-      <div class="card hi"><div class="kv"><b>Attribute Stones on average</b><span>${fmt(Math.round(st))}</span><b>Lumber on average</b><span>${fmt(Math.round(lu))}</span></div><p class="small">Includes failures that drop you back, never below the last safe level. +0 to +10, +15, +20, +30 and +35 cannot drop. Without Destruction Protection.</p></div>
-      <div class="tbl compact"><table><tr><th>Step</th><th class="num">Success</th><th class="num">Keep</th><th class="num">Drop 1</th><th class="num">Drop 2</th><th class="num">Stones</th><th class="num">Lumber</th></tr>${A.slice(from, to).map(r => `<tr><td>+${r.lv} → +${r.lv + 1}${r.safe ? ' <span class="tag ok">safe</span>' : ''}</td><td class="num">${pct(r.s)}</td><td class="num">${r.safe ? pct(100 - r.s) : pct(r.keep)}</td><td class="num">${r.safe ? '-' : pct(r.d1)}</td><td class="num">${r.safe ? '-' : pct(r.d2)}</td><td class="num">${r.stones}</td><td class="num">${fmt(r.lumber)}</td></tr>`).join('')}</table></div>`;
+      <div class="card hi"><div class="kv"><b>Attribute Stones on average</b><span>${fmt(Math.round(st))}</span><b>Lumber on average</b><span>${fmt(Math.round(lu))}</span></div><p class="small">Includes failures that drop you back, never below the last multiple of 5. +0 to +10, +15, +20, +25, +30 and +35 cannot drop. Without Destruction Protection.</p></div>
+      <div class="tbl compact"><table><tr><th>Step</th><th class="num">Success</th><th class="num">Keep</th><th class="num">Drop 1</th><th class="num">Drop 2</th><th class="num">Stones</th><th class="num">Lumber</th></tr>${A.slice(from, to).map(r => `<tr><td>+${r.lv} → +${r.lv + 1}${isSafe(r) ? ' <span class="tag ok">safe</span>' : ''}</td><td class="num">${r.s_base != null && r.s_base !== r.s ? `<span class="evv">${pct(r.s)}</span><span class="evb">${pct(r.s_base)}</span>` : pct(r.s)}</td><td class="num">${isSafe(r) ? pct(100 - r.s) : pct(r.keep)}</td><td class="num">${isSafe(r) ? '-' : pct(r.d1)}</td><td class="num">${isSafe(r) ? '-' : pct(r.d2)}</td><td class="num">${r.stones}</td><td class="num">${r.lumber_base != null ? `<span class="evv">${fmt(r.lumber)}</span><span class="evb">${fmt(r.lumber_base)}</span>` : fmt(r.lumber)}</td></tr>`).join('')}</table></div>`;
     }
     return `${subtabs('calc', 'mode', [['gear', 'Item enhancement'], ['attr', 'Attribute enhancement'], ['relic', 'Relic enhancement']], mode)}${body}`;
   };
 
   const TABS = [['drop', 'Drop chance'], ['enh', 'Enhancement'], ['roll', 'Roll odds'], ['engr', 'Engraving']];
-  P.calc = (_, f) => { const t = TABS.some(([k]) => k === f.tool) ? f.tool : 'drop'; if (f.mode) state.enh.mode = f.mode; return `<h2>Calculators</h2>${subtabs('calc', 'tool', TABS, t)}${({ drop, enh, roll, engr })[t]()}`; };
+  P.calc = (_, f) => { const t = TABS.some(([k]) => k === f.tool) ? f.tool : 'drop'; if (f.mode) state.enh.mode = f.mode; return `<h2>Calculators</h2>${subtabs('calc', 'tool', TABS, t)}${evNote(t)}${({ drop, enh, roll, engr })[t]()}`; };
   K.hooks.push((page, out) => {
     if (page !== 'calc') return;
     const cur = (K.filters.tool && TABS.some(([k]) => k === K.filters.tool)) ? K.filters.tool : 'drop';

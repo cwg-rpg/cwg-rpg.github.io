@@ -3,10 +3,18 @@
   const { W, M, I, Z, R, esc, link, tag, fmt, pct, ilink, mlink, zlink, rtable, gen, P, INDEX, KL, subtabs, filterBox } = K;
   const REALMS = [...new Set(W.zones.map(z => z.realm))];
   const zm = W.zone_meta || {};
+  /* Event Zone line: what the map spawns there now, its drops and what they make (built from the map) */
+  K.ezShort = () => { const EZ = W.event_zone; if (!EZ || !(EZ.monsters || []).length) return ''; return `<div class="evrow"><span class="evl"><span class="evdot"></span>Event zone</span><span>${EZ.monsters.map(m => mlink(m.id)).join(', ')} · <a href="#events">drops and details</a></span></div>`; };
+  K.ezLine = () => { const EZ = W.event_zone; if (!EZ || !(EZ.monsters || []).length) return '';
+    const mk = (EZ.makes || []).map(r => `${r.in.map(([k, n]) => (n > 1 ? fmt(n) + '× ' : '') + ilink(k)).join(' + ')} → ${ilink(r.out)}`).join(' · ');
+    return `<div class="evrow"><span class="evl"><span class="evdot"></span>Event zone</span><span>${EZ.monsters.map(m => mlink(m.id)).join(', ')} in ${link('zone', EZ.zone, 'Event Zone')}${EZ.monsters[0].respawn_s ? ` <span class="small">· respawns every ${EZ.monsters[0].respawn_s} s</span>` : ''}</span></div>`
+      + `<div class="evrow evsub">Drops ${EZ.drops.map(d => `${ilink(d.item)} <span class="small">${pct(d.chance)}</span>`).join(', ')}${mk ? `<br>${mk}` : ''}</div>`; };
   P.home = () => {
     const H = (W.heroes || []).length, T = (W.tierlist && W.tierlist.heroes || []).length;
     const card = (h, txt, sub) => `<a class="card home" href="#${h}"><h3>${txt}</h3><p class="small">${sub}</p></a>`;
-    return `<div class="card hi"><p style="margin:0"><img src="img_map.png" alt="" style="width:40px;height:40px;vertical-align:middle;margin-right:8px;border-radius:6px"><b>New?</b> Start with the ${link('guides', 'early-game', 'Early game guide')}.</p></div>
+    const EV = (W.events || []).filter(e => e.on);
+    const ez = K.ezShort(); const strip = EV.length || ez ? `<div class="evstrip col">${EV.length ? `<div class="evrow"><span class="evl"><span class="evdot"></span>Live events</span>${EV.map(e => `<a class="evchip" href="#events" title="${esc(e.what)}">${esc(e.chip)}</a>`).join('')}</div>` : ''}${ez}</div>` : '';
+    return `${strip}<div class="card hi"><p style="margin:0"><img src="img_map.png" alt="" style="width:40px;height:40px;vertical-align:middle;margin-right:8px;border-radius:6px"><b>New?</b> Start with the ${link('guides', 'early-game', 'Early game guide')}.</p></div>
     <div class="card hi"><p style="margin:0"><span style="display:inline-block;width:40px;height:40px;vertical-align:middle;margin-right:8px;border-radius:6px;background:var(--accent-soft);color:var(--accent);text-align:center;line-height:40px;font-size:22px">➜</span><b>Past the early game?</b> ${link('planner', '', 'Where to farm next')}: set your gear once, then follow each slot's next step.</p></div>
     <p><a class="discord" href="https://discord.gg/Z5Pf8exufw" target="_blank" rel="noopener">Join the CWG RPG Discord</a> <span class="small">· news and community</span></p>
     <div class="grid">
@@ -17,6 +25,7 @@
       ${card('heroes', 'Heroes', `${[...new Set((W.heroes || []).map(h => h.lineage))].length} heroes with tier 1 and tier 2 abilities`)}
       ${card('tierlist', 'Tier list', 'Solo, boss, AoE, AFK, utility and survival grades by stage, with F2P, tier 1 and lifesteal-pet filters')}
       ${card('guides', 'Guides', 'Early game route and gear progression by slot, with checklists')}
+      ${card('events', 'Events', `${(W.events || []).filter(e => e.on).length} events live now, and what each one boosts`)}
       ${card('systems', 'Game systems', 'Potions, stat shops, awakening, slots, attributes, party dungeons, potential, sailing, relics, Dimension Link')}
       ${card('supporter', 'Supporter', 'Everything the supporter menu sells and what it does')}
       ${card('pets', 'Pets', 'Every pet, its bonus and how to register it')}
