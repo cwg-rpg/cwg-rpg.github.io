@@ -80,6 +80,7 @@
         'Dimension Link tables reworked: points read left to right, and every perk is split into Points, Perk and Effect.',
         'Small tables fit their content instead of stretching across the page.',
         'Potential: Crit % and Crit Damage % get their own columns, easier to read next to Bonus Damage.',
+        'Sailing: the Grades table shows all 9 effects (Execute, Armor, Mana and HP Regen were missing), plus a table of how each one stacks and its cap.',
         'Fewer Tips, real tricks only: Ability slots, Potential, Awakening, Party dungeons and Primordial relics lost the ones that weren\'t. Sailing\'s group-up rule moved into How.',
         'Watch out is now Tips: a short gold card with the clever tricks only, checked in the map. Rules moved into the How steps, table repeats are gone.',
         'Fixed on the way: engraving gives real stats (+50,000 all stats per level), there is no single-slot ability roll, slot 4 is supporter only, +25 is an attribute floor, Dimension Link updates with -link, Party Engraving is saved per character.',
