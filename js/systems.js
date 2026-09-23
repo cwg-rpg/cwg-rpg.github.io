@@ -73,7 +73,7 @@
         'How steps on every system page cut down to the 1-3 rules you won\'t figure out by playing.',
         'Stat shops: every shop is now listed by its town and zone, and the page has no How box.',
         'Attribute enhancement Tips: a Progression Route from an endgame player.',
-        'Fewer Tips, real tricks only: Ability slots, Potential, Awakening and Party dungeons lost the ones that weren\'t. Sailing\'s group-up rule moved into How.',
+        'Fewer Tips, real tricks only: Ability slots, Potential, Awakening, Party dungeons and Primordial relics lost the ones that weren\'t. Sailing\'s group-up rule moved into How.',
         'Watch out is now Tips: a short gold card with the clever tricks only, checked in the map. Rules moved into the How steps, table repeats are gone.',
         'Fixed on the way: engraving gives real stats (+50,000 all stats per level), there is no single-slot ability roll, slot 4 is supporter only, +25 is an attribute floor, Dimension Link updates with -link, Party Engraving is saved per character.',
         'Attribute enhancement is much easier to read: every step now shows exactly what a failed try does, and the levels you can never drop below are spelled out.',
