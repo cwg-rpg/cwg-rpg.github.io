@@ -8,7 +8,7 @@
   const KEYS0 = Object.keys(SY).filter(k => !['unverified', 'rules'].includes(k) && SY[k] && typeof SY[k] === 'object' && !Array.isArray(SY[k]));
   const KEYS = [...KEYS0].sort((a, b) => (SORDER.indexOf(a) + 1 || 99) - (SORDER.indexOf(b) + 1 || 99));
   const cell = c => typeof c === 'object' && c && c.id ? (I[c.id] ? ilink(c.id) : M[c.id] ? mlink(c.id) : esc(c.name)) : esc(c);
-  const table0 = t => `<h4>${esc(t.title || '')}${(t.events || []).map(x => `<span class="evtag">${esc(x)}</span>`).join('')}</h4>${t.note ? `<p class="small">${esc(t.note)}</p>` : ''}<div class="tbl compact"><table><tr>${(t.columns || []).map(c => `<th>${esc(c)}</th>`).join('')}</tr>${(t.rows || []).map(r => `<tr>${r.map(c => `<td class="${typeof c === 'number' || (c && c.ev) ? 'num' : ''}">${c == null ? '' : typeof c === 'number' ? fmt(c) : K.evCell(c) || cell(c)}</td>`).join('')}</tr>`).join('')}</table></div>`;
+  const table0 = t => `<h4>${esc(t.title || '')}${(t.events || []).map(x => `<span class="evtag">${esc(x)}</span>`).join('')}</h4>${t.note ? `<p class="small">${esc(t.note)}</p>` : ''}<div class="tbl compact${t.fit || (t.columns || []).length <= 3 ? ' fit' : ''}"><table><tr>${(t.columns || []).map(c => `<th>${esc(c)}</th>`).join('')}</tr>${(t.rows || []).map(r => `<tr>${r.map(c => `<td class="${typeof c === 'number' || (c && c.ev) ? 'num' : ''}">${c == null ? '' : typeof c === 'number' ? fmt(c) : K.evCell(c) || cell(c)}</td>`).join('')}</tr>`).join('')}</table></div>`;
   const table = t => t.collapsed ? `<details class="tcol"><summary>${esc(t.title || '')}</summary>${table0(Object.assign({}, t, { title: '' }))}</details>` : table0(t);
   P.systems = (_, f) => {
     if (!KEYS.length) return '<h2>Game systems</h2><p class="small">Not built yet.</p>';
@@ -76,6 +76,10 @@
         'Attribute enhancement Tips: a Progression Route from an endgame player.',
         'Party dungeons: new Titles table (rank-up chance, Attack Power, bonus hit, ticket keep chance per rank), one Dungeons table with ticket realm, Lumber per run and boss drops, and Engraving tracks show the Contribution to reach level 25.',
         'Awakening: every boss in the table links to its page.',
+        'Attribute enhancement: one short Key levels table (floors and Progression Route levels) on top, the full 40-level tables fold open below.',
+        'Dimension Link tables reworked: points read left to right, and every perk is split into Points, Perk and Effect.',
+        'Small tables fit their content instead of stretching across the page.',
+        'Potential: Crit % and Crit Damage % get their own columns, easier to read next to Bonus Damage.',
         'Fewer Tips, real tricks only: Ability slots, Potential, Awakening, Party dungeons and Primordial relics lost the ones that weren\'t. Sailing\'s group-up rule moved into How.',
         'Watch out is now Tips: a short gold card with the clever tricks only, checked in the map. Rules moved into the How steps, table repeats are gone.',
         'Fixed on the way: engraving gives real stats (+50,000 all stats per level), there is no single-slot ability roll, slot 4 is supporter only, +25 is an attribute floor, Dimension Link updates with -link, Party Engraving is saved per character.',
