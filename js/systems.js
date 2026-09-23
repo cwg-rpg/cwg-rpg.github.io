@@ -83,7 +83,7 @@
         'Relic enhancement works again (it showed broken numbers) and lists every step with its reset chance.',
         'Drop chance: new Pick an item mode lists every monster that drops it, best first. Items with several rolls per kill now count every roll.',
         'Attribute enhancement: a Destruction Protection switch adds the protection Lumber and turns destroys into stay or drop 1.',
-        'Potential odds count the cheap way: ALL with nothing locked, 1 Lumber for all free slots. Engraving shows gold instead of a Lumber conversion, and every calculator says what it answers.',
+        'Potential odds count the cheap way: ALL with nothing locked, 1 Lumber for all free slots. Costs are shown in Lumber, the endgame currency, and every calculator says what it answers.',
       ]],
       ['Whole wiki', [
         'Two full wording passes over every tab: shorter, clearer, written like a player would say it, with nothing left out.',
