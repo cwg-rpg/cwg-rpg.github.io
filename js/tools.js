@@ -9,25 +9,32 @@
   /* ---- drop calculator ---- */
   const perKill = (chance, rolls, bonus) => { const p = Math.min(1, chance * (1 + bonus / 100) / 100); return 1 - Math.pow(1 - p, Math.max(1, rolls || 1)); };   /* every roll is its own chance */
   const kills = pk => pk >= 1 ? [1, 1] : pk > 0 ? [Math.round(1 / pk), Math.ceil(Math.log(0.1) / Math.log(1 - pk))] : [0, 0];
+  /* N copies (user 2026-09-25): drops after K kills = Binomial(K x rolls, p) */
+  const lgam = z => { const g = 7, c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61503916999185, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7]; if (z < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * z)) - lgam(1 - z); z -= 1; let x = c[0]; for (let i = 1; i < g + 2; i++) x += c[i] / (z + i); const tt = z + g + 0.5; return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(tt) - tt + Math.log(x); };
+  const atLeast = (n, p, N) => { if (N <= 0) return 1; if (p >= 1) return n >= N ? 1 : 0; if (n < N) return 0; const lp = Math.log(p), lq = Math.log(1 - p), ln = lgam(n + 1); let below = 0; for (let k = 0; k < N; k++) below += Math.exp(ln - lgam(k + 1) - lgam(n - k + 1) + k * lp + (n - k) * lq); return Math.max(0, 1 - below); };
+  const killsFor = (N, pRoll, rolls) => { rolls = Math.max(1, rolls || 1); if (!(pRoll > 0)) return [0, 0]; if (N <= 1) return kills(1 - Math.pow(1 - pRoll, rolls)); const avg = N / (rolls * pRoll); let lo = Math.floor(avg), hi = Math.max(lo + 1, Math.ceil(avg * 2) + 10); while (atLeast(hi * rolls, pRoll, N) < 0.9) hi *= 2; while (hi - lo > 1) { const mid = Math.floor((lo + hi) / 2); if (atLeast(mid * rolls, pRoll, N) >= 0.9) hi = mid; else lo = mid; } return [Math.round(avg), hi]; };
+  const pRollOf = (chance, bonus) => Math.min(1, chance * (1 + bonus / 100) / 100);
   const drop = () => {
     const s = state.drop; const by = s.by === 'item' ? 'item' : 'mon'; const bonus = num(s.bonus);
     const byBox = `<div class="sub-tabs">${[['mon', 'Pick a monster'], ['item', 'Pick an item']].map(([v, l]) => `<a href="#calc?tool=drop" class="calc-by ${by === v ? 'on' : ''}" data-by="${v}">${l}</a>`).join('')}</div>`;
+    const need = Math.max(1, Math.round(num(s.need) || 1));
+    const needRow = `<b>How many</b><span><input class="calc" data-k="need" type="number" min="1" step="1" value="${esc(s.need || 1)}" style="width:90px"> <span class="small">copies you need</span></span>`;
     const bonusRow = `<b>Your drop bonus</b><span><input class="calc" data-k="bonus" type="number" min="0" step="1" value="${esc(s.bonus || 0)}" style="width:90px"> % <span class="small">from -supporterstatus, or 0</span></span>`;
     if (by === 'item') {
       const drops = Object.values(I).filter(x => (x.drops || []).length).sort((a, b) => a.name.localeCompare(b.name));
-      const it = I[s.it] || null; const src = it ? it.drops.map(d => ({ m: d.m, pk: perKill(d.c, d.r, bonus), base: d.c, r: d.r })).filter(x => M[x.m]).sort((a, b) => b.pk - a.pk) : [];
+      const it = I[s.it] || null; const src = it ? it.drops.map(d => ({ m: d.m, pk: perKill(d.c, d.r, bonus), pr: pRollOf(d.c, bonus), base: d.c, r: d.r })).filter(x => M[x.m]).sort((a, b) => b.pk - a.pk) : [];
       return `<p class="small">Where to farm an item: every monster that drops it, best first.</p>${byBox}
-    <div class="card"><div class="kv"><b>Item</b><span><input class="calc" data-k="it" list="dropitems" value="${esc(it ? it.name : s.ittext || '')}" placeholder="Type an item name" style="width:100%;max-width:420px"><datalist id="dropitems">${drops.map(x => `<option value="${esc(x.name)}">`).join('')}</datalist></span>${bonusRow}</div></div>
-    ${src.length ? `<div class="tbl compact"><table><tr><th>Monster</th><th class="num">Per kill</th><th class="num">Usually</th><th class="num">If unlucky</th></tr>${src.map(x => { const [u, k] = kills(x.pk); return `<tr><td>${mlink(x.m)}</td><td class="num">${pct(100 * x.pk)}${x.r > 1 ? ` <span class="small">${x.r} rolls</span>` : ''}</td><td class="num">${fmt(u)} kills</td><td class="num">${fmt(k)} kills</td></tr>`; }).join('')}</table></div><p class="small">"If unlucky": only 1 player in 10 needs more.</p>` : (it ? '<p class="small">No monster drops this item. Check its page for recipes.</p>' : '')}`;
+    <div class="card"><div class="kv"><b>Item</b><span><input class="calc" data-k="it" list="dropitems" value="${esc(it ? it.name : s.ittext || '')}" placeholder="Type an item name" style="width:100%;max-width:420px"><datalist id="dropitems">${drops.map(x => `<option value="${esc(x.name)}">`).join('')}</datalist></span>${needRow}${bonusRow}</div></div>
+    ${src.length ? `<div class="tbl compact"><table><tr><th>Monster</th><th class="num">Per kill</th><th class="num">Usually${need > 1 ? ' for ' + fmt(need) : ''}</th><th class="num">If unlucky</th></tr>${src.map(x => { const [u, k] = killsFor(need, x.pr, x.r); return `<tr><td>${mlink(x.m)}</td><td class="num">${pct(100 * x.pk)}${x.r > 1 ? ` <span class="small">${x.r} rolls</span>` : ''}</td><td class="num">${fmt(u)} kills</td><td class="num">${fmt(k)} kills</td></tr>`; }).join('')}</table></div><p class="small">"If unlucky": only 1 player in 10 needs more.</p>` : (it ? '<p class="small">No monster drops this item. Check its page for recipes.</p>' : '')}`;
     }
     const mons = Object.values(M).filter(m => m.drops.length).sort((a, b) => a.name.localeCompare(b.name));
     const m = M[s.m] || null; const d = m ? m.drops.find(x => x.item === s.i) || m.drops[0] : null;
-    const pk = d ? perKill(d.chance, d.rolls, bonus) : 0; const [avg, k90] = kills(pk);
+    const pk = d ? perKill(d.chance, d.rolls, bonus) : 0; const [avg, k90] = d ? killsFor(need, pRollOf(d.chance, bonus), d.rolls) : [0, 0];
     return `<p class="small">How many kills an item takes: base drop chance raised by your drop bonus.</p>${byBox}
     <div class="card"><div class="kv"><b>Monster</b><span><input class="calc" data-k="m" list="mons" value="${esc(m ? m.name : s.mtext || '')}" placeholder="Type a monster name" style="width:100%;max-width:420px"><datalist id="mons">${mons.map(x => `<option value="${esc(x.name)}">`).join('')}</datalist></span>
     ${m ? `<b>Item</b><span><select class="calc" data-k="i">${m.drops.map(x => `<option value="${x.item}" ${d && d.item === x.item ? 'selected' : ''}>${esc((I[x.item] || {}).name || x.item)} (${pct(x.chance)})</option>`).join('')}</select></span>` : ''}
-    ${bonusRow}</div></div>
-    ${d ? `<div class="card hi"><div class="kv"><b>Chance per kill</b><span>${pct(100 * pk)}${bonus > 0 || d.rolls > 1 ? ` <span class="small">base ${pct(d.chance)}${d.rolls > 1 ? ' per roll · ' + d.rolls + ' rolls per kill' : ''}</span>` : ''}</span><b>Usually</b><span><b>${fmt(Math.round(avg))} kills</b></span><b>If unlucky</b><span><b>${fmt(k90)} kills</b></span></div><p class="small" style="margin:8px 0 0">"If unlucky": only 1 player in 10 needs more.</p></div>` : ''}`;
+    ${needRow}${bonusRow}</div></div>
+    ${d ? `<div class="card hi"><div class="kv"><b>Chance per kill</b><span>${pct(100 * pk)}${bonus > 0 || d.rolls > 1 ? ` <span class="small">base ${pct(d.chance)}${d.rolls > 1 ? ' per roll · ' + d.rolls + ' rolls per kill' : ''}</span>` : ''}</span><b>Usually${need > 1 ? ' for ' + fmt(need) : ''}</b><span><b>${fmt(Math.round(avg))} kills</b></span><b>If unlucky</b><span><b>${fmt(k90)} kills</b></span></div><p class="small" style="margin:8px 0 0">"If unlucky": only 1 player in 10 needs more.</p></div>` : ''}`;
   };
 
 

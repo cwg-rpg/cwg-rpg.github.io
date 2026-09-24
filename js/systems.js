@@ -81,6 +81,9 @@
         'Venomrose\'s Lumir now also counts its +40% party attack damage.',
         'AFK farm now counts the damage a hero really deals in a 30-minute AFK stretch, half on a monster pack (area hits included) and half on a field boss: a hero that slowly loses HP only counts until it dies. On the AFK board every card says whether it survives alone.',
       ]],
+      ['Calculators', [
+        'Drop chance asks how many copies you need (e.g. 200 fragments) and gives the kills for all of them, average and unlucky.',
+      ]],
       ['Guides', [
         'Gear routes fit on one screen, grouped by realm: you see the zone you are in (open) and the next three. Finished zones hide, with a Show link in case of a wrong tick, and later zones sit behind Show more.',
       ]],
