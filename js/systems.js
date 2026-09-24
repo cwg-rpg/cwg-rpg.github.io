@@ -44,6 +44,18 @@
     return `<h2>Guides</h2>${K.profileBar()}<div class="sub-tabs">${G.map(x => `<a href="#guides/${x.id}" class="${x.id === g.id ? 'on' : ''}">${esc(x.title)}</a>`).join('')}</div>${g.intro ? `<p class="small">${rich(g.intro)}</p>` : ''}${g.plain ? '' : `${K.statBar('stat', 'Items switch to this version')}<p><span class="small">☑ Tick steps as you go. A tick fills in everything above, an untick clears everything below. Early-game ticks carry over to the gear guide. Saved in this browser only</span></p>`}${secs.length > 1 ? subtabs('guides/' + g.id, 'gsec', secs.map(s => [s.h, s.h]), cur) : ''}<div class="card"><h3>${esc(g.title)}${secs.length > 1 ? ' · ' + esc(cur) : ''}</h3>${secs[si].table ? `<div class="tbl"><table><tr>${secs[si].table.columns.map(c => `<th>${esc(c)}</th>`).join('')}</tr>${secs[si].table.rows.map(r => `<tr>${r.map((c, ci) => `<td class="${ci === 0 ? 'num' : ci === 1 ? '' : 'small'}">${ci === 1 ? `<b>${esc(c)}</b>` : esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>` : stepsHtml(secs[si].steps, g.id + ':' + si)}</div>`;
   };
   const CHANGES = [   /* one entry per DAY (date only, no version numbers), newest first; every category once, in ORDER; merge same-day lines into that day */
+    ['25 Sep 2026', [
+      ['Heroes', [
+        'Every hero kit rechecked against the map. Each ability now shows what it really does, with the real numbers, above the in-game tooltip.',
+        'Ability keys rechecked against the map: every active shows the key you press (transformation skills too), passives show none.',
+      ]],
+      ['Tier list', [
+        'Scores redone from the kit recheck. Big movers: Tidecaller\'s skills stack about -19% armor (Utility #2), Heavenly Path hits harder and executes bosses at 15% HP, Crimson Night and Galeheart get their real critical strikes, Cinderstar, Fallen Emperor and White King\'s flag were counted too high.',
+        'Grades are measured against the 3rd-best hero, so one standout can no longer empty the A tier.',
+        'Demon Realm\'s Fate of London drops one blast on every locked enemy, so packs take it many times over: AoE up about 20 to 50%.',
+        'Venomrose\'s Lumir now also counts its +40% party attack damage.',
+      ]],
+    ]],
     ['24 Sep 2026', [
       ['Heroes', [
         'New Heroes tab: three columns by main stat with compact cards, role tags in colour, a star for supporter heroes, and Free / Supporter / role filters. No more long table.',
