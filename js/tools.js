@@ -163,7 +163,10 @@
       else if (k === 'it') { const it = Object.values(I).find(x => (x.drops || []).length && x.name.toLowerCase() === el.value.trim().toLowerCase()); s.it = it ? it.id : ''; s.ittext = el.value; if (!it) return; }
       else if (el.type === 'checkbox') s[k] = el.checked ? '1' : '0';
       else s[k] = el.value;
-      const pos = el.selectionStart; K.route(); const n = out.querySelector(`.calc[data-k="${k}"]`); if (n && n.tagName !== 'SELECT') { n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) { } }
+      /* keep exactly what the user typed (an emptied box stays empty) and the cursor where it was: number boxes
+         cannot report the cursor, so theirs goes to the end (bug 2026-09-25: clearing then typing 100 gave 001) */
+      const pos = el.selectionStart, raw = el.value; K.route(); const n = out.querySelector(`.calc[data-k="${k}"]`);
+      if (n && n.tagName !== 'SELECT') { n.focus(); if (n.type === 'number') { n.value = ''; n.value = raw; } else { try { n.setSelectionRange(pos, pos); } catch (e) { } } }
     }));
   });
 

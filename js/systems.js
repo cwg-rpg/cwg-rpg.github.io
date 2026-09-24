@@ -83,6 +83,7 @@
       ]],
       ['Calculators', [
         'Drop chance asks how many copies you need (e.g. 200 fragments) and gives the kills for all of them, average and unlucky.',
+        'Number boxes keep what you type: clearing a box and typing a new number no longer jumbles the digits.',
       ]],
       ['Guides', [
         'Gear routes fit on one screen, grouped by realm: you see the zone you are in (open) and the next three. Finished zones hide, with a Show link in case of a wrong tick, and later zones sit behind Show more.',
