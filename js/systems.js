@@ -78,7 +78,8 @@
         'Scores redone from the kit recheck. Big movers: Tidecaller\'s skills stack about -19% armor (Utility #2), Heavenly Path hits harder and executes bosses at 15% HP, Crimson Night and Galeheart get their real critical strikes, Cinderstar, Fallen Emperor and White King\'s flag were counted too high.',
         'Grades are measured against the 3rd-best hero, so one standout can no longer empty the A tier.',
         'Demon Realm\'s Fate of London drops one blast on every locked enemy, so packs take it many times over: AoE up about 20 to 50%.',
-        'Venomrose\'s Lumir now also counts its +40% party attack damage.',
+        'Venomrose\'s Lumir now also counts its +40% party attack damage, and her always-on party lifesteal now counts on top of the healing cap: Venomrose is S in Utility at every stage.',
+        'Near-ties go up: a hero only a few points under the S line, clearly with the top group, is S too.',
         'AFK farm now counts the damage a hero really deals in a 30-minute AFK stretch, half on a monster pack (area hits included) and half on a field boss: a hero that slowly loses HP only counts until it dies. On the AFK board every card says whether it survives alone.',
       ]],
       ['Calculators', [
