@@ -45,8 +45,10 @@
   };
   const CHANGES = [   /* one entry per DAY (date only, no version numbers), newest first; every category once, in ORDER; merge same-day lines into that day */
     ['25 Sep 2026', [
+      ['Monsters and items', [
+        'Pick a zone under the realm tabs to see only that zone. No more scrolling through a whole realm.',
+      ]],
       ['Heroes', [
-        'Every hero kit rechecked against the map. Each ability now shows what it really does, with the real numbers, above the in-game tooltip.',
         'Ability keys rechecked against the map: every active shows the key you press (transformation skills too), passives show none.',
       ]],
       ['Tier list', [
