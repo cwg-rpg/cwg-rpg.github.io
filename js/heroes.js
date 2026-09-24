@@ -61,7 +61,7 @@
     const HIT = (((T.stages || {})[early ? 'early' : stage]) || {}).basic_hit || 0;
     const kainPct = (o, sw) => { const b = o.tank_breakdown || {}; return KR * sw + (o.melee && b.hp_pool ? 100 * AURA * HIT / b.hp_pool * sw : 0); };
     const base0 = r => stage === 'early' && r.early ? r.early : stage === 'late' && r.late ? r.late : r;
-    const base = r => { const o = base0(r); const s = buffs && o.setups && o.setups[buffs]; return s ? { ...o, boss: s.boss, aoe: s.aoe, afk: s.afk, afk_dps: s.afk_dps, swings: s.swings, build: s.build } : o; };
+    const base = r => { const o = base0(r); const s = buffs && o.setups && o.setups[buffs]; return s ? { ...o, boss: s.boss, aoe: s.aoe, afk: s.afk, afk_dps: s.afk_dps, afk_dps_boss: s.afk_dps_boss, swings: s.swings, build: s.build } : o; };
     /* v14: the lifesteal box runs the same math as the tier list. Tank = how large a boss the hero could stand in front of
        for a minute (physical and spell tolerance on a log scale against the best hero). Kain adds 2% of max HP per attack
        to the healing. Survives if left alone = its no-click healing covers a mid-game pack. */
@@ -73,13 +73,18 @@
     const tankScore = (raw, best, b, taunt) => { const L = (x, bb, R) => Math.max(0, Math.min(1, Math.log(Math.max(x, 1e-9) * R / bb) / Math.log(R))); const w = b.tank_w || [0.6, 0.4]; const bs = (L(raw[0], best[0], b.burst_range || 100) + L(raw[1], best[1], b.burst_range || 100)) / 2, ss = (L(raw[2], best[2], b.sus_range || 1000) + L(raw[3], best[3], b.sus_range || 1000)) / 2; return 100 * (b.tank_scale || 0.9) * (w[0] * bs + w[1] * ss) + (taunt ? (b.taunt_bonus ?? 10) : 0); };
     const kainRaw = o => { const b = o.tank_breakdown || {}; return tankRaw(b.hp_pool, b.phys_damage_taken, b.spell_damage_taken, b.evasion, (b.recovery_pct_per_s || 0) + kainPct(o, o.swings || 0), b.fight_s, b.heal_cap); };
     const KBEST = (() => { const all = T.heroes.map(r => kainRaw(base(r))); return [0, 1, 2, 3].map(i => Math.max(...all.map(x => x[i]))); })();
-    const dmgPart = o => Math.max(0, (o.afk || 0) / (o.afk_safe ? 1 : 0.5) - 0.5 * (o.afk_tank || 0));
+    /* v22 AFK: no-click damage x the share of a 30-minute AFK stretch the hero stays alive (100 / HP lost per second, from full HP) */
+    const aliveOf = net => net >= 0 ? 1 : Math.min(1, (100 / -net) / 1800);
+    const mins = net => { const m = 100 / -net / 60; return m < 1 ? 'under 1 min' : '~' + Math.round(m) + ' min'; };
+    const afkLine = o => { const np = o.afk_sustain || 0, nb = o.afk_sustain_boss != null ? o.afk_sustain_boss : np; if (np >= 0 && nb >= 0) return ['Survives alone', 'ok']; if (np >= 0) return ['A field boss kills it in ' + mins(nb), 'warn']; return ['Dies in ' + mins(np), 'warn']; };
     const withKain = o => { const b = o.tank_breakdown; if (!b || !kain || !b.tank_best) return o;
       const tank = Math.min(100, Math.round(tankScore(kainRaw(o), KBEST, b, b.taunt)));
       const ap = o.afk_passive || {}; const net = (o.afk_sustain || 0) + kainPct(o, o.swings_afk || 0); const safe = net >= 0;
       const at = Math.min(100, Math.round(tankScore(tankRaw(b.hp_pool, b.afk_phys_taken || b.phys_damage_taken, b.afk_spell_taken || b.spell_damage_taken, ap.evasion, (ap.recovery_pct_per_s || 0) + kainPct(o, o.swings_afk || 0), b.fight_s, b.heal_cap), KBEST, b, false)));
-      return { ...o, tank, afk_tank: at, afk_safe: safe, afk_sustain: +net.toFixed(2), afk: +((dmgPart(o) + 0.5 * at) * (safe ? 1 : 0.5)).toFixed(1), afk_passive: { ...ap, recovery_pct_per_s: (ap.recovery_pct_per_s || 0) + kainPct(o, o.swings_afk || 0) } }; };
-    const src = r => withKain(base(r));
+      return { ...o, tank, afk_tank: at, afk_safe: safe, afk_sustain: +net.toFixed(2), afk_sustain_boss: o.afk_sustain_boss != null ? +((o.afk_sustain_boss || 0) + kainPct(o, o.swings_afk || 0)).toFixed(2) : undefined, afk_p: (o.afk_dps || 0) * aliveOf(net), afk_b: (o.afk_dps_boss || 0) * aliveOf((o.afk_sustain_boss != null ? o.afk_sustain_boss : o.afk_sustain || 0) + kainPct(o, o.swings_afk || 0)), afk_passive: { ...ap, recovery_pct_per_s: (ap.recovery_pct_per_s || 0) + kainPct(o, o.swings_afk || 0) } }; };
+    const src0 = r => withKain(base(r));
+    const KP = kain ? Math.max(1e-9, ...T.heroes.map(r => src0(r).afk_p || 0)) : 1, KB = kain ? Math.max(1e-9, ...T.heroes.map(r => src0(r).afk_b || 0)) : 1;
+    const src = r => { const o = src0(r); return kain ? { ...o, afk: +(100 * (0.5 * (o.afk_p || 0) / KP + 0.5 * (o.afk_b || 0) / KB)).toFixed(1) } : o; };
     const pool = T.heroes.filter(r => !f2p || r.free !== false);
     const max = {}; for (const k of ['boss', 'aoe', 'afk', 'utility', 'tank']) max[k] = Math.max(1, ...pool.map(r => src(r)[k] || 0));
     const norm = (r, k) => (src(r)[k] || 0) / max[k];
@@ -94,12 +99,12 @@
     /* Utility: only heroes with a party effect are ranked against each other, and a single strong effect is not capped
        at B just because White King stacks six (user 2026-09-24); the 15%-of-best floor stays */
     const colv = k => pool.map(x => val(x, k)).filter(x => k !== 'utility' || x > 0); const rankG = (k, v) => { if (!(v > 0)) return 'D'; const vs = colv(k); const above = vs.filter(x => x > v).length / vs.length; const mx = Math.max([...vs].sort((a, b) => b - a)[2] || 0, 0.001);   /* the value caps are measured against the 3rd-best hero, so one outlier cannot push everyone else down */ const g = above < 0.2 ? 'S' : above < 0.45 ? 'A' : above < 0.72 ? 'B' : above < 0.9 ? 'C' : 'D'; const cap = v < 0.15 * mx ? 'C' : (k !== 'utility' && v < 0.35 * mx) ? 'B' : 'S'; return 'SABCD'.indexOf(g) > 'SABCD'.indexOf(cap) ? g : cap; };
-    const cellG = (r, k) => k === 'solo' ? gtag(rankG('solo', solo(r)), 'solo score ' + Math.round(100 * solo(r) / topSolo)) : k === 'afk' ? gtag(rankG('afk', val(r, 'afk')), 'AFK farm ' + fmt(src(r).afk) + ' · no-click damage × stat per second: ' + fmt(src(r).afk_dps) + ' · no-click survival ' + fmt(src(r).afk_tank) + ' · ' + safety(src(r))[0]) : gtag(rankG(k, val(r, k)), (k === 'utility' || k === 'tank' ? '' : '× stat per second: ') + fmt(src(r)[k]));
+    const cellG = (r, k) => k === 'solo' ? gtag(rankG('solo', solo(r)), 'solo score ' + Math.round(100 * solo(r) / topSolo)) : k === 'afk' ? gtag(rankG('afk', val(r, 'afk')), 'AFK farm ' + fmt(src(r).afk) + ' · no-click damage on the pack, × stat per second: ' + fmt(src(r).afk_dps) + ' · ' + afkLine(src(r))[0]) : gtag(rankG(k, val(r, k)), (k === 'utility' || k === 'tank' ? '' : '× stat per second: ') + fmt(src(r)[k]));
     /* tier board (default view): heroes grouped by their grade in the chosen ranking, best first inside a grade */
     const view = f.tview === 'table' ? 'table' : 'board';
     const topK = Math.max(0.001, ...pool.map(r => val(r, key)));
     const card = r => { const o = src(r), p = (PORT[r.name] || [])[1] || (PORT[r.name] || [])[0];
-      return `<a class="tb-card" href="#hero/${encodeURIComponent(r.name)}" title="${esc(LBL[key])}: ${Math.round(100 * val(r, key) / topK)} of 100">${img(p, 34)}<span class="tb-t"><b>${esc(r.name)}</b><span class="small">${esc(role(o))}</span></span></a>`; };
+      return `<a class="tb-card" href="#hero/${encodeURIComponent(r.name)}" title="${esc(LBL[key])}: ${Math.round(100 * val(r, key) / topK)} of 100">${img(p, 34)}<span class="tb-t"><b>${esc(r.name)}</b>${key === 'afk' ? (() => { const [t_, c_] = afkLine(o); return `<span class="small tb-afk ${c_}">${esc(t_)}</span>`; })() : `<span class="small">${esc(role(o))}</span>`}</span></a>`; };
     const board = () => { const by = { S: [], A: [], B: [], C: [], D: [] }; for (const r of rows) by[rankG(key, val(r, key))].push(r);
       return `<div class="tb">${'SABCD'.split('').filter(g => by[g].length).map(g => `<div class="tb-row"><div class="tb-g g${g}">${g}</div><div class="tb-cards">${by[g].map(card).join('')}</div></div>`).join('')}</div>`; };
     return `<h2>Hero tier list</h2><p class="small">${(() => { const A = (((T.stages || {})[stage]) || {}).assume; return A ? `Tier 2 of every hero at ${esc(A.end)}${buffs ? (buffs === 'party' ? ', with the best party buffs' : ', with the best party buffs and the full supporter wing and aura collections') : ''}. ` : ''; })()}Grades rank heroes per ranking: S = top fifth, A = next quarter, B = middle, then C and D. Hover a card or grade for its score.</p>

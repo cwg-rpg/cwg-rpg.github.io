@@ -79,6 +79,7 @@
         'Grades are measured against the 3rd-best hero, so one standout can no longer empty the A tier.',
         'Demon Realm\'s Fate of London drops one blast on every locked enemy, so packs take it many times over: AoE up about 20 to 50%.',
         'Venomrose\'s Lumir now also counts its +40% party attack damage.',
+        'AFK farm now counts the damage a hero really deals in a 30-minute AFK stretch, half on a monster pack (area hits included) and half on a field boss: a hero that slowly loses HP only counts until it dies. On the AFK board every card says whether it survives alone.',
       ]],
       ['Guides', [
         'Gear routes fit on one screen, grouped by realm: you see the zone you are in (open) and the next three. Finished zones hide, with a Show link in case of a wrong tick, and later zones sit behind Show more.',
