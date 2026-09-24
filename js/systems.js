@@ -80,6 +80,7 @@
         'Demon Realm\'s Fate of London drops one blast on every locked enemy, so packs take it many times over: AoE up about 20 to 50%.',
         'Venomrose\'s Lumir now also counts its +40% party attack damage, and her always-on party lifesteal now counts on top of the healing cap: Venomrose is S in Utility at every stage.',
         'Near-ties go up: a hero only a few points under the S line, clearly with the top group, is S too.',
+        'Party buffs: every attack-speed aura in the party now adds up (they all stack in the map), up to the +400% cap. Before, only the strongest one counted.',
         'AFK farm now counts the damage a hero really deals in a 30-minute AFK stretch, half on a monster pack (area hits included) and half on a field boss: a hero that slowly loses HP only counts until it dies. On the AFK board every card says whether it survives alone.',
       ]],
       ['Calculators', [
