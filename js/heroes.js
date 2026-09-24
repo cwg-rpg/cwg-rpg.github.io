@@ -76,7 +76,7 @@
     /* v22 AFK: no-click damage x the share of a 30-minute AFK stretch the hero stays alive (100 / HP lost per second, from full HP) */
     const aliveOf = net => net >= 0 ? 1 : Math.min(1, (100 / -net) / 1800);
     const mins = net => { const m = 100 / -net / 60; return m < 1 ? 'under 1 min' : '~' + Math.round(m) + ' min'; };
-    const afkLine = o => { const np = o.afk_sustain || 0, nb = o.afk_sustain_boss != null ? o.afk_sustain_boss : np; if (np >= 0 && nb >= 0) return ['Survives alone', 'ok']; if (np >= 0) return ['A field boss kills it in ' + mins(nb), 'warn']; return ['Dies in ' + mins(np), 'warn']; };
+    const afkLine = o => { const np = o.afk_sustain || 0, nb = o.afk_sustain_boss != null ? o.afk_sustain_boss : np; return np >= 0 && nb >= 0 ? ['Survives', 'ok'] : ['Dies', 'warn']; };   /* user 2026-09-25: no time estimate */
     const withKain = o => { const b = o.tank_breakdown; if (!b || !kain || !b.tank_best) return o;
       const tank = Math.min(100, Math.round(tankScore(kainRaw(o), KBEST, b, b.taunt)));
       const ap = o.afk_passive || {}; const net = (o.afk_sustain || 0) + kainPct(o, o.swings_afk || 0); const safe = net >= 0;
