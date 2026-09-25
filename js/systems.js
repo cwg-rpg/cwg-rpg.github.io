@@ -85,6 +85,7 @@
         'AFK farm now counts the damage a hero really deals in a 30-minute AFK stretch, half on a monster pack (area hits included) and half on a field boss: a hero that slowly loses HP only counts until it dies. On the AFK board every card says whether it survives alone.',
       ]],
       ['Calculators', [
+        'Roll odds: pick the effect you want too (STR, Crit, Execute...), not just the grade. Every effect is equally likely in the map.',
         'Drop chance asks how many copies you need (e.g. 200 fragments) and gives the kills for all of them, average and unlucky.',
         'Number boxes keep what you type: clearing a box and typing a new number no longer jumbles the digits.',
       ]],

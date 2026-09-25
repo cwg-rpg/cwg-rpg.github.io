@@ -56,25 +56,31 @@
     ['sailing', 'Sailing Potential slot', /grade/i, '', [['Voyage Essence', 1], ['Lumber', 2]]],
   ];
   const AB_TRY = 10000, AB_OPEN = 3, POT_OPEN = 3; /* map: Reroll All with nothing kept costs 10,000 gold and rolls every open slot (3 free slots) */
+  /* effect type = one even roll, separate from the grade; no event, link or supporter perk touches it (findings/checks/roll_types.md, user 2026-09-25) */
+  const RTYPES = { ability_slots: ['STR', 'AGI', 'INT', 'Max HP'], potential: ['Bonus STR', 'Bonus AGI', 'Bonus INT', 'All Stats', 'Bonus Damage', 'Crit (chance and damage)'], sailing: ['Execute', 'Armor Weakening', 'Magic DR', 'Mana', 'HP Regen', 'Attack speed', 'Move speed'] };
   const PITY = 50000; /* sailing: every 50,000 Voyage Essence spent guarantees a Divinity roll (1 essence per roll) */
   const roll = () => {
     const s = state.roll; const sysI = Math.max(0, ROLL.findIndex(r => r[0] === s.sys)); const [sys, label, re, note, cost] = ROLL[sysI];
     const T = tbl(sys, re); if (!T) return '<p class="small">No data.</p>';
     const gi = col(T, /^Grade$/), ci = col(T, /Chance/); const grades = T.rows.map(r => [r[gi], Number(r[ci])]);
     const tgt = grades.some(g => g[0] === s.g) ? s.g : grades[Math.min(5, grades.length - 1)][0];
-    const k = grades.findIndex(g => g[0] === tgt); const p1 = grades.slice(k).reduce((a, g) => a + g[1], 0) / 100; const p = cost === 'gold' ? 1 - Math.pow(1 - p1, AB_OPEN) : cost === 'all' ? 1 - Math.pow(1 - p1, POT_OPEN) : p1;
+    const types = RTYPES[sys] || []; const ty = types.includes(s.t) ? s.t : 'any'; const share = ty === 'any' ? 1 : 1 / types.length;
+    const k = grades.findIndex(g => g[0] === tgt); const p1 = Math.min(1, grades.slice(k).reduce((a, g) => a + g[1], 0) / 100) * share; const p = cost === 'gold' ? 1 - Math.pow(1 - p1, AB_OPEN) : cost === 'all' ? 1 - Math.pow(1 - p1, POT_OPEN) : p1;
     const pity = sys === 'sailing';
-    const expRolls = p > 0 ? (pity ? (1 - Math.pow(1 - p, PITY)) / p : 1 / p) : Infinity;
-    const q = x => { if (p >= 1) return 1; const n = Math.ceil(Math.log(1 - x) / Math.log(1 - p));   /* a 100% grade (e.g. Normal or better) sums to a hair over 1 */ return pity ? Math.min(n, PITY) : n; };
+    /* sailing pity: every PITY-th roll is Divinity, but its effect is still random, so it hits a chosen effect only 1 time in 7 (pq) */
+    const pq = share, F = pity ? Math.pow(1 - p, PITY - 1) * (1 - pq) : 0;
+    const expRolls = p > 0 ? (pity ? (1 - Math.pow(1 - p, PITY)) / p / (1 - F) : 1 / p) : Infinity;
+    const q = x => { if (p >= 1) return 1; if (!pity) return Math.ceil(Math.log(1 - x) / Math.log(1 - p));   /* a 100% grade (e.g. Normal or better) sums to a hair over 1 */
+      let left = 1 - x, kk = 0; while (F > 0 && Math.pow(F, kk + 1) > left && kk < 1000) kk++; const r = Math.ceil(Math.log(left / Math.pow(F, kk)) / Math.log(1 - p)); return kk * PITY + Math.min(r, PITY); };
     const unlucky = q(0.9);
     let lum = n => 0, extra = null;
     const gold = AB_TRY * (FX.ability_gold || 1);
     if (sys === 'potential') lum = n => n;   /* ALL with nothing locked costs 1 Lumber and rolls every free slot */
     else if (sys === 'sailing') { lum = n => 2 * n; extra = n => ` + ${nfmt(n)} Voyage Essence`; }
     const line = n => cost === 'gold' ? `<b>${nfmt(n * gold / 1e6)} Lumber</b> <span class="small">· ${fmt(Math.round(n * gold))} gold · ${nfmt(n)} Reroll All presses</span>` : cost === 'all' ? `<b>${nfmt(lum(n))} Lumber</b> <span class="small">· ${nfmt(n)} ALL presses</span>` : `<b>${nfmt(lum(n))} Lumber</b>${extra ? extra(n) : ''} <span class="small">· ${nfmt(n)} rolls</span>`;
-    return `<p class="small">What it costs to roll one slot up to a grade you want, with live events.</p><div class="card"><div class="kv"><b>Roll</b><span>${sel('sys', ROLL.map(r => [r[0], r[1]]), sys)}</span><b>Until</b><span>${sel('g', grades.map(g => [g[0], g[0] + ' or better']), tgt)}</span></div></div>
+    return `<p class="small">What it costs to roll one slot up to a grade you want, with live events.</p><div class="card"><div class="kv"><b>Roll</b><span>${sel('sys', ROLL.map(r => [r[0], r[1]]), sys)}</span><b>Until</b><span>${sel('g', grades.map(g => [g[0], g[0] + ' or better']), tgt)}</span><b>Effect</b><span>${sel('t', [['any', 'Any effect'], ...types.map(x => [x, x])], ty)}</span></div></div>
     <div class="card hi"><div class="kv"><b>Usually</b><span>${line(expRolls)}</span><b>If unlucky</b><span>${line(unlucky)}</span></div>
-    <p class="small" style="margin:8px 0 0">"If unlucky": only 1 player in 10 needs more.${pity ? ` Every ${fmt(PITY)} Voyage Essence spent guarantees Divinity, so ${fmt(PITY)} rolls at most.` : ''}${cost === 'gold' ? ` Each press is a Reroll All with nothing equipped or protected: ${fmt(gold)} gold, all ${AB_OPEN} free slots roll at once. Lumber at 1,000,000 gold each.` : ''}${cost === 'all' ? ` Each press is ALL with nothing locked: 1 Lumber, all ${POT_OPEN} free slots roll at once. Save a preset first and load it back if the set gets worse.` : ''}${sys === 'sailing' ? ' Each roll costs 1 Voyage Essence and 2 Lumber.' : ''}</p></div>`;
+    <p class="small" style="margin:8px 0 0">"If unlucky": only 1 player in 10 needs more.${ty !== 'any' ? ` Every effect is equally likely: 1 roll in ${types.length} is ${esc(ty)}, whatever the grade.` : ''}${pity ? (ty === 'any' ? ` Every ${fmt(PITY)} Voyage Essence spent guarantees Divinity, so ${fmt(PITY)} rolls at most.` : ` Every ${fmt(PITY)} Voyage Essence spent guarantees Divinity, but its effect is still random.`) : ''}${cost === 'gold' ? ` Each press is a Reroll All with nothing equipped or protected: ${fmt(gold)} gold, all ${AB_OPEN} free slots roll at once. Lumber at 1,000,000 gold each.` : ''}${cost === 'all' ? ` Each press is ALL with nothing locked: 1 Lumber, all ${POT_OPEN} free slots roll at once. Save a preset first and load it back if the set gets worse.` : ''}${sys === 'sailing' ? ' Each roll costs 1 Voyage Essence and 2 Lumber.' : ''}</p></div>`;
   };
 
   /* ---- engraving: contribution and party dungeon clears ---- */
