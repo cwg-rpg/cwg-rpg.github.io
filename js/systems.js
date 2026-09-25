@@ -69,7 +69,7 @@
   const CHANGES = [   /* one entry per DAY (date only, no version numbers), newest first; every category once, in ORDER; merge same-day lines into that day */
     ['25 Sep 2026', [
       ['Monsters and items', [
-        'Golden Poporing's Blessing: its page now shows the real +2% HP regen aura (the tooltip says 1%).',
+        'Golden Poporing\'s Blessing: its page now shows the real +2% HP regen aura (the tooltip says 1%).',
         'Pick a zone under the realm tabs to see only that zone. No more scrolling through a whole realm.',
       ]],
       ['Heroes', [
