@@ -91,6 +91,9 @@
       ['Guides', [
         'Gear routes fit on one screen, grouped by realm: you see the zone you are in (open) and the next three. Finished zones hide, with a Show link in case of a wrong tick, and later zones sit behind Show more.',
       ]],
+      ['Whole wiki', [
+        'Changelog: older days fold into one line with their categories.',
+      ]],
     ]],
     ['24 Sep 2026', [
       ['Heroes', [
@@ -195,7 +198,9 @@
       ]],
     ]],
   ];
-  P.changelog = () => `<h2>Changelog</h2>${CHANGES.map(([d, cats]) => `<h3>${esc(d)}</h3>${cats.map(([c, xs]) => `<h4>${esc(c)}</h4><ul>${xs.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`).join('')}`).join('')}`;
+  /* same layout as the Adventurer's Path wiki (user 2026-09-25): newest day open, older days folded to one line (date · count · categories); categories are small labels, not headings */
+  P.changelog = () => `<h2>Changelog</h2>${CHANGES.map(([d, cats], i) => { const nn = cats.reduce((a, c) => a + c[1].length, 0);
+    return `<details class="cg-day"${i ? '' : ' open'}><summary><b>${esc(d)}</b><span class="small"> · ${nn} change${nn === 1 ? '' : 's'}</span><span class="small cg-cats">: ${esc(cats.map(c => c[0]).join(', '))}</span></summary>${cats.map(([c, xs]) => `<div class="cg-cat"><span class="tag">${esc(c)}</span><ul>${xs.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`).join('')}</details>`; }).join('')}`;
   P.credits = () => `<h2>Credits</h2><ul><li>CWG RPG - Covenant of Warring Gods 1.1.0 by TheMidLane / Gwelawyr's RPG Ports. Discord: <a href="https://discord.gg/Z5Pf8exufw" target="_blank" rel="noopener">discord.gg/Z5Pf8exufw</a>.</li><li>All numbers come straight from the map's data.</li><li>Early-game route based on Stoner's guide. Hero portraits from the community wiki, item icons from the community 3.81 planner.</li><li>Gear planner based on Gwelawyr's planner.</li><li>Built with Anthropic's Claude. The tier list is math, not in-game testing.</li></ul>`;
   const ZSTATE = {}, ZMORE = {};   /* ZMORE[route] = the user asked to see every upcoming zone */   /* zone folds the user opened or closed by hand (guide route), kept while the page is open */
   K.hooks.push((page, out) => { if (page !== 'guides') return;
