@@ -17,7 +17,7 @@
   const TLBY = {}; for (const t of ((W.tierlist || {}).heroes || [])) TLBY[t.name] = t;
   const hasTL = Object.keys(TLBY).length > 0;
   /* Heroes tab: three columns by main stat, compact cards (portrait, name, role), star = supporter hero, quick filters */
-  const RCLS = { Tank: 'tank', Offtank: 'tank', Damage: 'dmg', Buffer: 'buf', Debuffer: 'deb', Healer: 'heal' };
+  const RCLS = { Tank: 'tank', Damage: 'dmg', Buffer: 'buf', Debuffer: 'deb', Healer: 'heal' };
   P.heroes = (_, f) => {
     const acc = ['free', 'supp'].includes(f.hacc) ? f.hacc : 'all', rl = ['tank', 'dmg', 'buf', 'deb', 'heal'].includes(f.hrole) ? f.hrole : 'all';
     const info = l => { const t = HM.find(h => h.lineage === l && h.tier === 1 && !h.skin) || {}; const roles = String(roleOf(TLBY[l]) || '').split(' / ').filter(Boolean); return { l, stat: t.stat, supp: !!t.donation_flag, roles }; };
@@ -28,7 +28,7 @@
     return `<h2>Heroes</h2><p class="small">${all.length} heroes, ${nFree} free. <span class="hx-star-i">★</span> = supporter hero. Tier 2 comes with the class change. Grades: ${link('tierlist', '', 'tier list')}.</p>
     <div class="hx-f">${subtabs('heroes', 'hacc', [['all', 'All'], ['free', 'Free'], ['supp', 'Supporter']], acc)}${subtabs('heroes', 'hrole', [['all', 'Any role'], ['tank', 'Tank'], ['dmg', 'Damage'], ['buf', 'Buffer'], ['deb', 'Debuffer'], ['heal', 'Healer']], rl)}</div>
     <div class="hx">${col('STR', 'Strength')}${col('AGI', 'Agility')}${col('INT', 'Intelligence')}</div>
-    ${hasTL ? '<p class="small">Role tags describe the kit, not the hero. Tank = has a taunt, Offtank = built to take hits. Healer = party healing of at least 8% of max HP per second. Every hero deals damage, tagged or not.</p>' : ''}`;
+    ${hasTL ? '<p class="small">Role tags describe the kit, not the hero. Tank = has a taunt, only Nature. Healer = party healing of at least 8% of max HP per second. Every hero deals damage, tagged or not.</p>' : ''}`;
   };
   P.hero = l => {
     const hs = HM.filter(h => h.lineage === l && !h.skin && h.tier <= 2).sort((a, b) => a.tier - b.tier); if (!hs.length) return '<p>Unknown hero.</p>';

@@ -73,6 +73,7 @@
       ]],
       ['Heroes', [
         'Ability keys rechecked against the map: every active shows the key you press (transformation skills too), passives show none.',
+        'No more Offtank tag: White King, Aran and Emberclaw are tagged Damage, their kits carry real damage procs. Tank stays Nature\'s, the only taunt.',
       ]],
       ['Tier list', [
         'Scores redone from the kit recheck. Big movers: Tidecaller\'s skills stack about -19% armor (Utility #2), Heavenly Path hits harder and executes bosses at 15% HP, Crimson Night and Galeheart get their real critical strikes, Cinderstar, Fallen Emperor and White King\'s flag were counted too high.',
