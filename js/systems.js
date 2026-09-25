@@ -84,7 +84,11 @@
         'Party buffs: every attack-speed aura in the party now adds up (they all stack in the map), up to the +400% cap. Before, only the strongest one counted.',
         'AFK farm now counts the damage a hero really deals in a 30-minute AFK stretch, half on a monster pack (area hits included) and half on a field boss: a hero that slowly loses HP only counts until it dies. On the AFK board every card says whether it survives alone.',
       ]],
+      ['Game systems', [
+        'Sailing: both pity counters explained, with a table of how much the bad-luck boost raises each top grade. Ability slots and Potential have no pity.',
+      ]],
       ['Calculators', [
+        'Sailing roll odds count the bad-luck boost exactly, so top-grade targets now cost far less than before.',
         'Roll odds: pick the effect you want too (STR, Crit, Execute...), not just the grade. Every effect is equally likely in the map.',
         'Drop chance asks how many copies you need (e.g. 200 fragments) and gives the kills for all of them, average and unlucky.',
         'Number boxes keep what you type: clearing a box and typing a new number no longer jumbles the digits.',
