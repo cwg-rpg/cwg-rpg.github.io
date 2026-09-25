@@ -4,7 +4,7 @@
   const SY = W.systems || {}; const CALC = W.calc || {};
   const num = v => { const n = parseFloat(String(v).replace(/[,\s]/g, '')); return isNaN(n) ? 0 : n; };
   const readLS = k => { try { return JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch (e) { return {}; } };
-  const state = { drop: {}, enh: {}, roll: {}, engr: {} };
+  const state = { drop: {}, enh: {}, roll: {}, engr: {}, title: {} };
 
   /* ---- drop calculator ---- */
   const perKill = (chance, rolls, bonus) => { const p = Math.min(1, chance * (1 + bonus / 100) / 100); return 1 - Math.pow(1 - p, Math.max(1, rolls || 1)); };   /* every roll is its own chance */
@@ -115,6 +115,27 @@
     <p class="small">About 1 ticket in 10 is kept on entry. Lumber earned = clears x Lumber per run, before gold bonuses.</p></div>`;
   };
 
+  /* ---- party dungeon titles: every wave-10 clear rolls one rank-up at the chance of your CURRENT rank (map 1.1.0, findings/22-party-dungeon-titles.md).
+     Reads the Game Systems "Titles" table: rank cell "0-19" or a number, chance "0.5%", keep-ticket "10%". Base chances (no supporter bonus). ---- */
+  const title = () => {
+    const s = state.title; const T = tbl('party_dungeon', /^Titles$/); if (!T) return '<p class="small">No data.</p>';
+    const ri = col(T, /^Rank$/), ci = col(T, /Rank-up chance/), ki = col(T, /keep ticket/i);
+    const P = [], KEEP = []; let top = 0;
+    T.rows.forEach(r => { const rk = String(r[ri]).split('-').map(Number), lo = rk[0], hi = rk.length > 1 ? rk[1] : rk[0];
+      const c = parseFloat(String(r[ci])) / 100, k = parseFloat(String(r[ki])) / 100 || 0;
+      for (let x = lo; x <= hi; x++) { P[x] = c > 0 ? c : 0; KEEP[x] = k; } top = Math.max(top, hi); });
+    const from = Math.min(top - 1, Math.max(0, Math.round(num(s.from)))), to = Math.min(top, Math.max(from + 1, Math.round(num(s.to) || top)));
+    let avg = 0, tickets = 0; for (let r = from; r < to; r++) { const e = 1 / P[r]; avg += e; tickets += e * (1 - KEEP[r]); }
+    /* "if unlucky": clears until 9 players in 10 have reached the target rank (exact, rank by rank) */
+    let m = new Float64Array(top + 1); m[from] = 1; let n = 0;
+    while (m[to] < 0.9 && n < 1e6) { const nx = new Float64Array(top + 1); nx[to] = m[to]; for (let r = from; r < to; r++) { if (!m[r]) continue; nx[r + 1] += m[r] * P[r]; nx[r] += m[r] * (1 - P[r]); } m = nx; n++; }
+    const opts = a => a.map(x => [String(x), String(x)]);
+    return `<p class="small">Dungeon title rank-ups. Every wave-10 clear rolls one rank-up at the chance of your current rank.</p>
+    <div class="card"><div class="kv"><b>From rank</b><span>${sel('from', opts([...Array(top).keys()]), from)}</span><b>To rank</b><span>${sel('to', opts([...Array(top).keys()].map(x => x + 1).filter(x => x > from)), to)}</span></div></div>
+    <div class="card hi"><div class="kv"><b>Usually</b><span><b>${fmt(Math.round(avg))} clears</b></span><b>If unlucky</b><span><b>${fmt(n)} clears</b></span><b>Tickets used</b><span>about ${fmt(Math.round(tickets))} <span class="small">(the rest are kept on entry)</span></span></div>
+    <p class="small" style="margin:8px 0 0">"If unlucky": only 1 player in 10 needs more. A clear = one full run to wave 10. Base chances, the supporter bonus is not counted.</p></div>`;
+  };
+
   /* ---- relic enhancement: expected tries with the reset to +0 ---- */
   const relic = s => {
     const T = tbl('relic_enhancement', /Enhancement chances/); if (!T) return '<p class="small">No data.</p>';
@@ -173,8 +194,8 @@
     return `${subtabs('calc', 'mode', [['gear', 'Item enhancement'], ['attr', 'Attribute enhancement'], ['relic', 'Relic enhancement'], ['aura', 'Taegeuk aura']], mode)}<p class="small">${intro}</p>${body}`;
   };
 
-  const TABS = [['drop', 'Drop chance'], ['enh', 'Enhancement'], ['roll', 'Roll odds'], ['engr', 'Engraving']];
-  P.calc = (_, f) => { const t = TABS.some(([k]) => k === f.tool) ? f.tool : 'drop'; if (f.mode) state.enh.mode = f.mode; return `<h2>Calculators</h2>${subtabs('calc', 'tool', TABS, t)}${evNote(t)}${({ drop, enh, roll, engr })[t]()}`; };
+  const TABS = [['drop', 'Drop chance'], ['enh', 'Enhancement'], ['roll', 'Roll odds'], ['engr', 'Engraving'], ['title', 'Dungeon titles']];
+  P.calc = (_, f) => { const t = TABS.some(([k]) => k === f.tool) ? f.tool : 'drop'; if (f.mode) state.enh.mode = f.mode; return `<h2>Calculators</h2>${subtabs('calc', 'tool', TABS, t)}${evNote(t)}${({ drop, enh, roll, engr, title })[t]()}`; };
   K.hooks.push((page, out) => {
     if (page !== 'calc') return;
     const cur = (K.filters.tool && TABS.some(([k]) => k === K.filters.tool)) ? K.filters.tool : 'drop';
