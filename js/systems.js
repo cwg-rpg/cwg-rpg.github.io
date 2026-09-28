@@ -8,15 +8,27 @@
   const KEYS0 = Object.keys(SY).filter(k => !['unverified', 'rules'].includes(k) && SY[k] && typeof SY[k] === 'object' && !Array.isArray(SY[k]));
   const KEYS = [...KEYS0].sort((a, b) => (SORDER.indexOf(a) + 1 || 99) - (SORDER.indexOf(b) + 1 || 99));
   const cell = c => typeof c === 'object' && c && c.id ? (I[c.id] ? ilink(c.id) : M[c.id] ? mlink(c.id) : esc(c.name)) : esc(c);
-  const table0 = t => `<h4>${esc(t.title || '')}${(t.events || []).map(x => `<span class="evtag">${esc(x)}</span>`).join('')}</h4>${t.note ? `<p class="small">${esc(t.note)}</p>` : ''}<div class="tbl compact${t.fit || (t.columns || []).length <= 3 ? ' fit' : ''}"><table><tr>${(t.columns || []).map(c => `<th>${esc(c)}</th>`).join('')}</tr>${(t.rows || []).map(r => `<tr>${r.map(c => `<td class="${typeof c === 'number' || (c && c.ev) ? 'num' : ''}">${c == null ? '' : typeof c === 'number' ? fmt(c) : K.evCell(c) || cell(c)}</td>`).join('')}</tr>`).join('')}</table></div>`;
-  const table = t => t.collapsed ? `<details class="tcol"><summary>${esc(t.title || '')}</summary>${table0(Object.assign({}, t, { title: '' }))}</details>` : table0(t);
+  /* My setup: which column of which table changes, and the new values per row (null = nothing to change) */
+  const baseOf = c => c && typeof c === 'object' && 'b' in c ? c.b : c;
+  const ADJ = (k, t) => { if (!K.setupOn() || !t || !t.columns) return null; const s = K.setup(); const ci = re => t.columns.findIndex(c => re.test(c)); const tt = t._title || t.title;
+    if ((k === 'ability_slots' && /Roll grades/.test(tt)) || (k === 'potential' && /^Grades$/.test(tt))) { const c = ci(/^Chance/); if (c < 0) return null; const ys = K.fx.grades(k, t.rows.map(r => +baseOf(r[c]))); return ys ? { c, v: ys } : null; }
+    if (k === 'sailing' && tt === 'Grades' && s.link >= 20) { const c = ci(/^Chance/); return c < 0 ? null : { c, v: K.fx.sailGrades(K.fx.sailTh()) }; }
+    if (k === 'attribute_enhancement' && (s.link >= 10 || s.s2) && /^(Steps and costs|Key levels)$/.test(tt)) { const c = ci(/^Success/); const A = (W.calc || {}).attribute || []; if (c < 0) return null;
+      if (tt === 'Key levels') { const li = ci(/^Level$/); return { c, v: t.rows.map(r => { const a = A[+r[li] - 1]; return a ? K.fx.attr(a).s : null; }) }; }   /* a key level's success is the step that reaches it */
+      return { c, v: t.rows.map((r, i) => A[i] ? K.fx.attr(A[i]).s : null) }; }
+    if (k === 'party_dungeon' && tt === 'Titles' && s.c1) { const c = ci(/Rank-up chance/); return c < 0 ? null : { c, v: t.rows.map(r => { const p = parseFloat(String(r[c])); return isNaN(p) ? null : K.fx.title(p); }) }; }
+    return null; };
+  /* nothing to change -> null (the normal event cell stays); otherwise yours in gold, the TRUE base (no events) struck */
+  const cellY = (c, y) => { const ev = c && typeof c === 'object' && 'ev' in c; const shown = ev ? c.ev : typeof c === 'string' ? parseFloat(c) : c; if (y == null || isNaN(shown) || Math.abs(y - shown) < 1e-9) return null; return K.yourPct(ev ? c.b : shown, y); };
+  const table0 = (t, k) => { const adj = ADJ(k, t); return `<h4>${esc(t.title || '')}${(t.events || []).map(x => `<span class="evtag">${esc(x)}</span>`).join('')}</h4>${t.note ? `<p class="small">${esc(t.note)}</p>` : ''}<div class="tbl compact${t.fit || (t.columns || []).length <= 3 ? ' fit' : ''}"><table><tr>${(t.columns || []).map(c => `<th>${esc(c)}</th>`).join('')}</tr>${(t.rows || []).map((r, ri) => `<tr>${r.map((c, ci) => `<td class="${typeof c === 'number' || (c && c.ev) ? 'num' : ''}">${(adj && ci === adj.c && cellY(c, adj.v[ri])) || (c == null ? '' : typeof c === 'number' ? fmt(c) : K.evCell(c) || cell(c))}</td>`).join('')}</tr>`).join('')}</table></div>`; };
+  const table = (t, k) => t.collapsed ? `<details class="tcol"><summary>${esc(t.title || '')}</summary>${table0(Object.assign({}, t, { title: '', _title: t.title }), k)}</details>` : table0(t, k);
   P.systems = (_, f) => {
     if (!KEYS.length) return '<h2>Game systems</h2><p class="small">Not built yet.</p>';
     const k = KEYS.includes(f.sys) ? f.sys : KEYS[0]; const s = SY[k];
     const head = `<h2>Game systems</h2>${subtabs('systems', 'sys', KEYS.map(x => [x, s && SY[x].title || NAMES[x] || x.replace(/_/g, ' ')]), k)}`;
     const shops = '';   /* stat shop towns are named in the page's own table */
-    if (s.how) return `${head}<h3>${esc(s.title || NAMES[k] || k)}</h3><p>${esc(s.what || '')}${s.open ? ` <span class="small">· ${esc(s.open)}</span>` : ''}</p>${(s.live || []).length ? `<div class="evstrip small-strip"><span class="evl"><span class="evdot"></span>Live event</span>${s.live.map(e => `<div><a class="evchip" href="#events">${esc(e.chip)}</a> <span class="evw">${esc(e.what)}</span></div>`).join('')}</div>` : ''}${(s.how || []).length || (s.tips || []).length ? `<div class="sys-grid${(s.tips || []).length && (s.how || []).length ? '' : ' one'}">${(s.how || []).length ? `<div class="card"><h4 style="margin-top:0">How</h4><ol>${s.how.map(x => `<li>${esc(x)}</li>`).join('')}</ol></div>` : ''}${(s.tips || []).length ? `<div class="card tips"><h4 style="margin-top:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>Tips</h4><ul>${s.tips.map(x => { const [h, ...ls] = String(x).split('\n'); return `<li>${esc(h)}${ls.length ? `<ul class="tip-list">${ls.map(l => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}</li>`; }).join('')}</ul></div>` : ''}</div>` : ''}${shops}${(s.items || []).length ? `<p class="small">Items: ${gen(s.items)}</p>` : ''}${(s.monsters || []).length ? `<p class="small">Bosses: ${gen(s.monsters)}</p>` : ''}${(s.tables || []).map(table).join('')}`;
-    return `${head}<h3>${esc(NAMES[k] || k)}</h3><p>${esc(s.summary || '')}</p>${(s.rules || []).length ? `<ul>${s.rules.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}${shops}${(s.items || []).length ? `<p>Items: ${gen(s.items)}</p>` : ''}${(s.tables || []).map(table).join('')}`;
+    if (s.how) return `${head}<h3>${esc(s.title || NAMES[k] || k)}</h3><p>${esc(s.what || '')}${s.open ? ` <span class="small">· ${esc(s.open)}</span>` : ''}</p>${(s.live || []).length ? `<div class="evstrip small-strip"><span class="evl"><span class="evdot"></span>Live event</span>${s.live.map(e => `<div><a class="evchip" href="#events">${esc(e.chip)}</a> <span class="evw">${esc(e.what)}</span></div>`).join('')}</div>` : ''}${(s.how || []).length || (s.tips || []).length ? `<div class="sys-grid${(s.tips || []).length && (s.how || []).length ? '' : ' one'}">${(s.how || []).length ? `<div class="card"><h4 style="margin-top:0">How</h4><ol>${s.how.map(x => `<li>${esc(x)}</li>`).join('')}</ol></div>` : ''}${(s.tips || []).length ? `<div class="card tips"><h4 style="margin-top:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>Tips</h4><ul>${s.tips.map(x => { const [h, ...ls] = String(x).split('\n'); return `<li>${esc(h)}${ls.length ? `<ul class="tip-list">${ls.map(l => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}</li>`; }).join('')}</ul></div>` : ''}</div>` : ''}${shops}${(s.items || []).length ? `<p class="small">Items: ${gen(s.items)}</p>` : ''}${(s.monsters || []).length ? `<p class="small">Bosses: ${gen(s.monsters)}</p>` : ''}${(s.tables || []).map(x => table(x, k)).join('')}`;
+    return `${head}<h3>${esc(NAMES[k] || k)}</h3><p>${esc(s.summary || '')}</p>${(s.rules || []).length ? `<ul>${s.rules.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}${shops}${(s.items || []).length ? `<p>Items: ${gen(s.items)}</p>` : ''}${(s.tables || []).map(x => table(x, k)).join('')}`;
   };
   /* ---- events (read from the map at build time) ---- */
   P.events = () => {
@@ -68,8 +80,25 @@
   };
   const CHANGES = [   /* one entry per DAY (date only, no version numbers), newest first; every category once, in ORDER; merge same-day lines into that day */
     ['28 Sep 2026', [
+      ['Monsters and items', [
+        'Item stats now come from the map data, not the tooltip text. One item differs: Valhalla [STR] really gives AGI +200,000.',
+        'Hidden item effects from the map on item pages: the bonus hit of 195 weapons and accessories (5% of attacks, highest stat x11 to x30), the Leviathan burst bonus, Eldorado / Varkan / Royal Mark thorns, Rembol heals and Token auto-convert. 21 armors: their HP regen line does nothing.',
+      ]],
+      ['Tier list', [
+        'Lifesteal pet option: base Kain no longer counts an aura. Its 2% lifesteal is on its own attacks. Evolved Kain keeps its 6% aura.',
+      ]],
       ['Game systems', [
         'Attribute: Destruction Protection only stops the 2-level drop, and its Lumber is charged on every try from +15, even where nothing can drop.',
+      ]],
+      ['Pets', [
+        'Pet effects rechecked against the map: Kain (no aura before evolving), Tigarex (kill bonus reaches allies within 1,500), Lumias (+10% of total armor).',
+        'Every pet you own gives its bonus at the same time, summoned or not (the map checks ownership only).',
+      ]],
+      ['Supporter', [
+        'New prices from the map maker: hero swap $40, stat slots free through progression ($10 / $15 to unlock them on every character). Tier XXI (+500%, $370) is the new top tier.',
+      ]],
+      ['Whole wiki', [
+        'My setup (top of the page): pick your supporter tier, perks and Dimension Link points. Drop, crafting, attribute, grade and title chances and the calculators then show your numbers next to the base ones. Nothing set = base values.',
       ]],
     ]],
     ['26 Sep 2026', [

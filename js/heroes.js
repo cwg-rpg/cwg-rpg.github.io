@@ -57,7 +57,7 @@
     const T = W.tierlist; if (!T || !T.heroes) return '<h2>Tier list</h2><p class="small">Not built yet.</p>';
     const COLS = ['solo', 'boss', 'aoe', 'afk', 'utility', 'tank']; const key = COLS.includes(f.sort) ? f.sort : 'solo'; const f2p = f.f2p === '1'; const stage = ['early', 'mid', 'late'].includes(f.stage) ? f.stage : 'late'; const buffs = ['party', 'supp'].includes(f.buffs) ? f.buffs : ''; const early = false; /* tier-1 scoring dropped 2026-09-23: you reach tier 2 fast */
     const KR = f.kain === '3' ? 3 : (f.kain === '1' || f.kain === '2') ? 2 : 0; const kain = KR > 0;   /* Kain 2% / evolved Kain 3% of max HP per attack */
-    const AURA = KR === 3 ? 0.06 : 0.02;   /* Kain counts as summoned: its Vampiric Aura heals 2% (evolved 6%) of basic-attack damage, melee weapons only */
+    const AURA = KR === 3 ? 0.06 : 0;   /* Kain counts as summoned: only evolved Kain has a Vampiric Aura (6% of melee attack damage); base Kain's 2% lifesteal is on its own attacks (checked 2026-09-28) */
     const HIT = (((T.stages || {})[early ? 'early' : stage]) || {}).basic_hit || 0;
     const kainPct = (o, sw) => { const b = o.tank_breakdown || {}; return KR * sw + (o.melee && b.hp_pool ? 100 * AURA * HIT / b.hp_pool * sw : 0); };
     const base0 = r => stage === 'early' && r.early ? r.early : stage === 'late' && r.late ? r.late : r;

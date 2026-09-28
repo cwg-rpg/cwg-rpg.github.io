@@ -15,11 +15,11 @@
   const killsFor = (N, pRoll, rolls) => { rolls = Math.max(1, rolls || 1); if (!(pRoll > 0)) return [0, 0]; if (N <= 1) return kills(1 - Math.pow(1 - pRoll, rolls)); const avg = N / (rolls * pRoll); let lo = Math.floor(avg), hi = Math.max(lo + 1, Math.ceil(avg * 2) + 10); while (atLeast(hi * rolls, pRoll, N) < 0.9) hi *= 2; while (hi - lo > 1) { const mid = Math.floor((lo + hi) / 2); if (atLeast(mid * rolls, pRoll, N) >= 0.9) hi = mid; else lo = mid; } return [Math.round(avg), hi]; };
   const pRollOf = (chance, bonus) => Math.min(1, chance * (1 + bonus / 100) / 100);
   const drop = () => {
-    const s = state.drop; const by = s.by === 'item' ? 'item' : 'mon'; const bonus = num(s.bonus);
+    const s = state.drop; const by = s.by === 'item' ? 'item' : 'mon'; const bonus = s.bonus == null || s.bonus === '' ? K.setup().drop : num(s.bonus);
     const byBox = `<div class="sub-tabs">${[['mon', 'Pick a monster'], ['item', 'Pick an item']].map(([v, l]) => `<a href="#calc?tool=drop" class="calc-by ${by === v ? 'on' : ''}" data-by="${v}">${l}</a>`).join('')}</div>`;
     const need = Math.max(1, Math.round(num(s.need) || 1));
     const needRow = `<b>How many</b><span><input class="calc" data-k="need" type="number" min="1" step="1" value="${esc(s.need || 1)}" style="width:90px"> <span class="small">copies you need</span></span>`;
-    const bonusRow = `<b>Your drop bonus</b><span><input class="calc" data-k="bonus" type="number" min="0" step="1" value="${esc(s.bonus || 0)}" style="width:90px"> % <span class="small">from -supporterstatus, or 0</span></span>`;
+    const bonusRow = `<b>Your drop bonus</b><span><input class="calc" data-k="bonus" type="number" min="0" step="1" value="${esc(s.bonus == null || s.bonus === '' ? K.setup().drop : s.bonus)}" style="width:90px"> % <span class="small">from -supporterstatus, or 0</span></span>`;
     if (by === 'item') {
       const drops = Object.values(I).filter(x => (x.drops || []).length).sort((a, b) => a.name.localeCompare(b.name));
       const it = I[s.it] || null; const src = it ? it.drops.map(d => ({ m: d.m, pk: perKill(d.c, d.r, bonus), pr: pRollOf(d.c, bonus), base: d.c, r: d.r })).filter(x => M[x.m]).sort((a, b) => b.pk - a.pk) : [];
@@ -78,12 +78,15 @@
     const s = state.roll; const sysI = Math.max(0, ROLL.findIndex(r => r[0] === s.sys)); const [sys, label, re, note, cost] = ROLL[sysI];
     const T = tbl(sys, re); if (!T) return '<p class="small">No data.</p>';
     const gi = col(T, /^Grade$/), ci = col(T, /Chance/); const grades = T.rows.map(r => [r[gi], Number(r[ci])]);
+    { /* My setup: P1 / Dimension Link change the grade chances (base values from the raw table, events re-applied in K.fx.grades) */
+      const RAW = ((SY[sys] || {}).tables || []).find(x => re.test(x.title)); const ys = RAW && sys !== 'sailing' ? K.fx.grades(sys, RAW.rows.map(r => { const c = r[ci]; return +(c && typeof c === 'object' && 'b' in c ? c.b : c); })) : null;
+      if (ys) grades.forEach((g, i) => { g[1] = ys[i]; }); }
     const tgt = grades.some(g => g[0] === s.g) ? s.g : grades[Math.min(5, grades.length - 1)][0];
     const types = RTYPES[sys] || []; const ty = types.includes(s.t) ? s.t : 'any'; const share = ty === 'any' ? 1 : 1 / types.length;
     const k = grades.findIndex(g => g[0] === tgt); const p1 = Math.min(1, grades.slice(k).reduce((a, g) => a + g[1], 0) / 100) * share; const p = cost === 'gold' ? 1 - Math.pow(1 - p1, AB_OPEN) : cost === 'all' ? 1 - Math.pow(1 - p1, POT_OPEN) : p1;
     const pity = sys === 'sailing';
     /* sailing: exact chain over the bad-luck counter; every PITY-th roll is Divinity with a random effect (hits a chosen effect 1 time in 7) and empties the counter, so cycles repeat */
-    const sEv = (W.events || []).find(e => e.id === 'sailing_top2'), th = sEv && sEv.on ? 2 : 1;
+    const th = K.fx.sailTh();
     const S = pity ? sailSurv(k, share, th) : null, F = pity ? S[PITY - 1] * (1 - share) : 0;
     const expRolls = pity ? S.reduce((a, x) => a + x, 0) / (1 - F) : p > 0 ? 1 / p : Infinity;
     const q = x => { const left = 1 - x; if (!pity) return p >= 1 ? 1 : Math.ceil(Math.log(left) / Math.log(1 - p));   /* a 100% grade (e.g. Normal or better) sums to a hair over 1 */
@@ -123,7 +126,7 @@
     const P = [], KEEP = []; let top = 0;
     T.rows.forEach(r => { const rk = String(r[ri]).split('-').map(Number), lo = rk[0], hi = rk.length > 1 ? rk[1] : rk[0];
       const c = parseFloat(String(r[ci])) / 100, k = parseFloat(String(r[ki])) / 100 || 0;
-      for (let x = lo; x <= hi; x++) { P[x] = c > 0 ? c : 0; KEEP[x] = k; } top = Math.max(top, hi); });
+      for (let x = lo; x <= hi; x++) { P[x] = c > 0 ? K.fx.title(c * 100) / 100 : 0; KEEP[x] = k; } top = Math.max(top, hi); });
     const from = Math.min(top - 1, Math.max(0, Math.round(num(s.from)))), to = Math.min(top, Math.max(from + 1, Math.round(num(s.to) || top)));
     let avg = 0, tickets = 0; for (let r = from; r < to; r++) { const e = 1 / P[r]; avg += e; tickets += e * (1 - KEEP[r]); }
     /* "if unlucky": clears until 9 players in 10 have reached the target rank (exact, rank by rank) */
@@ -133,7 +136,7 @@
     return `<p class="small">Dungeon title rank-ups. Every wave-10 clear rolls one rank-up at the chance of your current rank.</p>
     <div class="card"><div class="kv"><b>From rank</b><span>${sel('from', opts([...Array(top).keys()]), from)}</span><b>To rank</b><span>${sel('to', opts([...Array(top).keys()].map(x => x + 1).filter(x => x > from)), to)}</span></div></div>
     <div class="card hi"><div class="kv"><b>Usually</b><span><b>${fmt(Math.round(avg))} clears</b></span><b>If unlucky</b><span><b>${fmt(n)} clears</b></span><b>Tickets used</b><span>about ${fmt(Math.round(tickets))} <span class="small">(the rest are kept on entry)</span></span></div>
-    <p class="small" style="margin:8px 0 0">"If unlucky": only 1 player in 10 needs more. A clear = one full run to wave 10. Base chances, the supporter bonus is not counted.</p></div>`;
+    <p class="small" style="margin:8px 0 0">"If unlucky": only 1 player in 10 needs more. A clear = one full run to wave 10. ${K.setup().c1 ? 'With C1: rank-up chance x1.5.' : 'Base chances, the supporter bonus is not counted.'}</p></div>`;
   };
 
   /* ---- relic enhancement: expected tries with the reset to +0 ---- */
@@ -151,7 +154,7 @@
   };
 
   /* ---- enhancement calculator ---- */
-  const chains = (() => { const out = {}; for (const r of R) { if (!/^Enhancement/.test(r.kind)) continue; const o = I[r.out]; if (!o || o.level == null) continue; const cands = r.in.filter(([k]) => I[k] && (I[k].family === o.family || I[k].type === o.type) && !/Stone/.test(I[k].name) && (I[k].level || 0) < o.level).sort((a, b) => (I[b[0]].level || 0) - (I[a[0]].level || 0)); const base = cands[0]; if (!base) continue; const key = o.family + (o.variant ? ' [' + o.variant + ']' : ''); (out[key] = out[key] || []).push({ lv: o.level, chance: r.chance, out: r.out, base: base[0], stone: r.in.filter(([k]) => k !== base[0]).map(([k, n]) => (n > 1 ? n + '× ' : '') + ((I[k] || {}).name || k)).join(' + ') }); } for (const k of Object.keys(out)) out[k].sort((a, b) => a.lv - b.lv); return out; })();
+  const chains = (() => { const out = {}; for (const r of R) { if (!/^Enhancement/.test(r.kind)) continue; const o = I[r.out]; if (!o || o.level == null) continue; const cands = r.in.filter(([k]) => I[k] && (I[k].family === o.family || I[k].type === o.type) && !/Stone/.test(I[k].name) && (I[k].level || 0) < o.level).sort((a, b) => (I[b[0]].level || 0) - (I[a[0]].level || 0)); const base = cands[0]; if (!base) continue; const key = o.family + (o.variant ? ' [' + o.variant + ']' : ''); (out[key] = out[key] || []).push({ lv: o.level, chance: r.chance, cbase: r.chance_base, out: r.out, base: base[0], stone: r.in.filter(([k]) => k !== base[0]).map(([k, n]) => (n > 1 ? n + '× ' : '') + ((I[k] || {}).name || k)).join(' + ') }); } for (const k of Object.keys(out)) out[k].sort((a, b) => a.lv - b.lv); return out; })();
   const chainKeys = Object.keys(chains).sort();
   const aura = st => {
     const D = CALC.aura; if (!D || !(D.steps || []).length) return '<p class="small">No data.</p>';
@@ -175,13 +178,13 @@
     if (mode === 'gear') {
       const key = chains[s.chain] ? s.chain : chainKeys[0]; const ch = chains[key] || []; const lvs = ch.map(x => x.lv);
       const from = lvs.includes(num(s.from)) ? num(s.from) : (lvs[0] - 1); const to = lvs.includes(num(s.to)) ? num(s.to) : lvs[lvs.length - 1];
-      const steps = ch.filter(x => x.lv > from && x.lv <= to); const stones = steps.reduce((a, x) => a + (x.chance > 0 ? 100 / x.chance : 0), 0);
+      const steps = ch.filter(x => x.lv > from && x.lv <= to).map(x => ({ ...x, chance: K.fx.craft(x.chance, x.cbase) })); const stones = steps.reduce((a, x) => a + (x.chance > 0 ? 100 / x.chance : 0), 0);
       body = `<div class="card"><div class="kv"><b>Item</b><span><select class="calc" data-k="chain">${chainKeys.map(k => `<option ${k === key ? 'selected' : ''}>${esc(k)}</option>`).join('')}</select></span><b>From</b><span><select class="calc" data-k="from">${[lvs[0] - 1, ...lvs.slice(0, -1)].map(l => `<option value="${l}" ${l === from ? 'selected' : ''}>+${l}</option>`).join('')}</select></span><b>To</b><span><select class="calc" data-k="to">${lvs.map(l => `<option value="${l}" ${l === to ? 'selected' : ''}>+${l}</option>`).join('')}</select></span></div></div>
       ${steps.length ? `<div class="card hi"><div class="kv"><b>Stones on average</b><span>${fmt(Math.round(stones))} <span class="small">${esc(steps[0].stone)}</span></span><b>Steps</b><span>${steps.length}</span></div></div><div class="tbl compact"><table><tr><th>Step</th><th class="num">Chance</th><th class="num">Tries on average</th></tr>${steps.map(x => `<tr><td>${ilink(x.out)}</td><td class="num">${pct(x.chance)}</td><td class="num">${x.chance > 0 ? fmt(Math.round(100 / x.chance * 10) / 10) : '-'}</td></tr>`).join('')}</table></div>` : '<p class="small">Pick a higher target.</p>'}`;
     } else {
       const PROT = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 20, 20, 20, 20, 50, 50, 50, 50, 50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300];   /* map: extra Lumber per try with Destruction Protection */
       const prot = s.prot === '1';
-      const A = (CALC.attribute || []).map(r => prot && r.lv >= 15 ? { ...r, keep: r.keep + r.d2 / 2, d1: r.d1 + r.d2 / 2, d2: 0, lumber: r.lumber + Math.ceil(PROT[r.lv] * ((r.lumber_base && r.lumber_base !== r.lumber) ? 0.5 : 1)) } : r); const from = Math.min(39, Math.max(0, num(s.afrom))); const to = Math.min(40, Math.max(from + 1, num(s.ato) || 40));
+      const S1 = K.setup().s1; const A = (CALC.attribute || []).map(K.fx.attr).map(r => prot && r.lv >= 15 ? { ...r, keep: r.keep + r.d2 / 2, d1: r.d1 + r.d2 / 2, d2: 0, lumber: r.lumber + (S1 ? 0 : 1) * Math.ceil(PROT[r.lv] * ((r.lumber_base && r.lumber_base !== r.lumber) ? 0.5 : 1)) } : r); const from = Math.min(39, Math.max(0, num(s.afrom))); const to = Math.min(40, Math.max(from + 1, num(s.ato) || 40));
       // expected stones / lumber from level l to reach 'to': E[l] = cost + keep*E[l] + s*E[l+1] + d1*E[down1] + d2*E[down2]; floor = highest safe multiple of 5 reached
       const floorOf = l => l - l % 5; /* a fail never drops below the last multiple of 5 */ const isSafe = r => r.safe || (r.lv >= 10 && r.lv % 5 === 0);
       const solve = costKey => { const E = new Array(41).fill(0); for (let it = 0; it < 4000; it++) { for (let l = to - 1; l >= from; l--) { const r = A[l]; if (!r) continue; const dn1 = Math.max(floorOf(l), l - 1), dn2 = Math.max(floorOf(l), l - 2); const c = r[costKey] || 0; const keep = r.keep / 100, sp = r.s / 100, p1 = isSafe(r) ? 0 : r.d1 / 100, p2 = isSafe(r) ? 0 : r.d2 / 100; const kp = isSafe(r) ? 1 - sp : keep; E[l] = (c + sp * E[l + 1] + p1 * E[dn1 < from ? from : dn1] + p2 * E[dn2 < from ? from : dn2]) / (1 - kp); } } return E[from]; };

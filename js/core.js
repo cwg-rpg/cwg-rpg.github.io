@@ -53,7 +53,7 @@ window.WK = (function () {
 
   /* event-adjusted value: {ev: event value, b: base value, u: unit} */
   const evCell = c => c && typeof c === 'object' && 'ev' in c ? `<span class="evv">${typeof c.ev === 'number' ? fmt(c.ev) : esc(c.ev)}${esc(c.u || '')}</span><span class="evb">${typeof c.b === 'number' ? fmt(c.b) : esc(c.b)}${esc(c.u || '')}</span>` : '';
-  const chanceHtml = r => r.chance == null ? '' : r.chance_base != null ? `<span class="evv">${pct(r.chance)}</span><span class="evb">${pct(r.chance_base)}</span>` : pct(r.chance);
+  const chanceHtml = r => r.chance != null && setup().craft ? yourPct(r.chance_base != null ? r.chance_base : r.chance, fx.craft(r.chance, r.chance_base)) : r.chance == null ? '' : r.chance_base != null ? `<span class="evv">${pct(r.chance)}</span><span class="evb">${pct(r.chance_base)}</span>` : pct(r.chance);
   /* ---- router ---- */
   const P = {}; const filters = {}; const hooks = [];
   let lastView = '';
@@ -83,6 +83,7 @@ window.WK = (function () {
   function start() {
     const upd = document.getElementById('upd'), mu = (window.CWG.meta || {}).updated;   // "Updated <newest changelog date>" in the header
     if (upd && mu) upd.textContent = ' · Wiki updated ' + mu;
+    if (upd) { upd.insertAdjacentHTML('afterend', ' · <a href="#" id="suBtn" class="su-btn">&#9881; My setup</a> <span id="suChip"></span>'); const o = $('#out'); if (o) { const d = document.createElement('div'); d.id = 'suPanel'; d.hidden = true; o.before(d); } setupDraw(); }
     try { const s = JSON.parse(localStorage.getItem(LAST) || 'null'); if (s && !location.hash && s.h && Date.now() - s.t < 30 * 60 * 1000) { Object.assign(filters, s.f || {}); history.replaceState(null, '', s.h); setTimeout(() => window.scrollTo(0, s.y || 0), 50); } } catch (e) { }
     window.addEventListener('scroll', () => { clearTimeout(window._cwgT); window._cwgT = setTimeout(saveLast, 300); }, { passive: true });
     window.addEventListener('pagehide', saveLast);
@@ -98,11 +99,77 @@ window.WK = (function () {
   const GEAR_TYPES = new Set(['Weapon', 'Armor', 'Gloves', 'Accessory', 'Gem', 'Hidden', 'Pet gear']);
   /* ---- profiles: one set of checklist ticks, owned gear, main stat and part ticks per character ----
      The live keys always hold the current profile, so every page keeps reading them as before. */
-  const PKEYS = ['cwgGuideDone', 'cwgOwned', 'cwgStat', 'cwgPlanParts'];
+  const PKEYS = ['cwgGuideDone', 'cwgOwned', 'cwgStat', 'cwgPlanParts', 'cwgSetup'];
   const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
   const lsSet = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { } };
   const profs = () => { let p = null; try { p = JSON.parse(lsGet('cwgProfiles') || 'null'); } catch (e) { } if (!p || !Array.isArray(p.list) || !p.list.length) p = { cur: 'p1', list: [{ id: 'p1', name: 'Main' }], data: {} }; if (!p.list.some(x => x.id === p.cur)) p.cur = p.list[0].id; p.data = p.data || {}; return p; };
   const saveProfs = p => lsSet('cwgProfiles', JSON.stringify(p));
+  /* ---- My setup (user 2026-09-28): supporter perks + Dimension Link points, saved per profile.
+     Nothing set = base values everywhere (what a new visitor sees). Pages read K.setup() and show "base -> yours". ---- */
+  const TIER_PCT = [0, 8, 16, 24, 32, 44, 56, 68, 92, 116, 140, 170, 200, 230, 265, 300, 335, 370, 405, 440, 475, 500];   /* Supporter page tiers (owner's menu, Tier XXI top since 2026-09-28) */
+  const ROMAN = n => ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI'][n] || String(n);
+  const SETUP0 = { tier: 0, craft: 0, s1: 0, s2: 0, ap1: 0, pp1: 0, c1: 0, link: 0 };
+  const setup = () => { let s = {}; try { s = JSON.parse(lsGet('cwgSetup') || '{}') || {}; } catch (e) { } const o = Object.assign({}, SETUP0);
+    for (const k in SETUP0) o[k] = Math.max(0, Math.round(+s[k] || 0)); o.tier = Math.min(TIER_PCT.length - 1, o.tier); o.link = Math.min(182, o.link); o.drop = TIER_PCT[o.tier]; return o; };
+  /* drop chance with the setup's rate bonus: same rule as the drop calculator (chance x (1 + bonus%), capped at 100) */
+  const yourDrop = c => Math.min(100, c * (1 + setup().drop / 100));
+  /* show a chance as 'yours' with the base struck through, or just the base when nothing changes */
+  /* any drop chance on any list: yours (supporter tier) with the base struck, or just the base when no tier is set */
+  const dropPct = c => setup().drop ? yourPct(c, yourDrop(c)) : pct(c);
+  const yourPct = (base, yours) => yours == null || Math.abs(yours - base) < 1e-12 ? pct(base) : `<span class="yv">${pct(yours)}</span><span class="yb">${pct(base)}</span>`;
+
+  /* setup math, ported from the map (findings/checks/setup_formulas.md). Event switches are read from the live events list, so a new map version keeps working. */
+  const evOn = id => !!((W.events || []).find(e => e.id === id) || {}).on;
+  const GRADE_W = [0, 200000, 100000, 50000, 10000, 8000, 1000, 200, 50, 10, 5, 3, 2];   /* fallback weights per 1,000,000, Normal first (takes the rest) */
+  const fx = {
+    /* recipe / enhancement-stone success: base x2 Craft supporter x2 craft event, cap 100 */
+    craft: (chance, base) => { const s = setup(); if (!s.craft || chance == null) return chance; const b = base != null ? base : chance; return Math.min(100, b * 2 * (evOn('craft') ? 2 : 1)); },
+    /* attribute step row (calc data) -> the same row with the setup's success chance; fail shares scaled to the new fail share */
+    attr: r => { const s = setup(); if (!(s.link >= 10 || s.s2) || r.s_base == null) return r;
+      const m = ((evOn('attribute_x3') ? 3 : evOn('attribute_x2') ? 2 : 0) + (s.link >= 10 ? 2 : 0)) || 1; let ns;
+      if (r.lv < 30) { ns = r.s_base * m; if (s.s2 && r.lv >= 20) ns = Math.floor((ns * 150 + 99) / 100); ns = Math.min(95, ns); }
+      else { let u = Math.round(r.s_base * 100) * m; if (s.s2) u = Math.floor((u * 150 + 99) / 100); ns = Math.min(9500, u) / 100; }
+      if (ns === r.s) return r; const k = r.s >= 100 ? 0 : (100 - ns) / (100 - r.s);
+      return { ...r, s: ns, keep: r.keep * k, d1: r.d1 * k, d2: r.d2 * k }; },
+    /* Ability / Potential grade chances in % (Normal first) from the base chances, or null when the setup changes nothing */
+    grades: (sys, basePct) => { const s = setup(); const ab = sys === 'ability_slots';
+      const p1 = ab ? s.ap1 : s.pp1, link = ab ? s.link >= 5 : s.link >= 15; if (!p1 && !link) return null;
+      const w = basePct.map((c, g) => g ? Math.round(c * 10000) || GRADE_W[g] || 0 : 0);
+      for (let g = 4; g < 13; g++) if (p1) w[g] += Math.floor(w[g] / 2);                       /* grades 5..13: +50% (integer) */
+      if (ab && evOn('ability_high2')) for (let g = 4; g < 9; g++) w[g] *= 2;
+      const th = ab ? ((link ? 3 : 0) + (evOn('ability_top3') ? 3 : 0) + (evOn('ability_high2') ? 2 : 0)) || 1 : ((link ? 2 : 0) + (evOn('potential_top3') ? 3 : 0)) || 1;
+      for (let g = 9; g < 13; g++) w[g] *= th;                                                 /* grades 10..13 x th */
+      w[0] = Math.max(1, 1000000 - w.slice(1).reduce((a, x) => a + x, 0)); return w.map(x => x / 10000); },
+    /* Sailing top-grade multiplier: live event +2, Dimension Link 20+ +2 */
+    sailTh: () => ((evOn('sailing_top2') ? 2 : 0) + (setup().link >= 20 ? 2 : 0)) || 1,
+    /* Sailing grade chances in % (Normal first) with an empty bad-luck counter */
+    sailGrades: th => { let c = [2, 5, 10, 25, 100, 500, 2500, 12000, 50000, 140000, 300000, 550000];
+      if (th > 1) { const y9 = (th - 1) * c[3]; c = c.map((x, i) => i < 4 ? x * th : x + y9); }
+      const o = new Array(13).fill(0); let prev = 0; c.forEach((x, i) => { o[12 - i] = (x - prev) / 10000; prev = x; }); o[0] = (1e6 - prev) / 10000; return o; },
+    /* dungeon title rank-up chance per clear (%): C1 x1.5 */
+    title: p => Math.min(100, p * (setup().c1 ? 1.5 : 1)),
+  };
+  const setupOn = () => { const s = setup(); return Object.keys(SETUP0).some(k => s[k] > 0); };
+  const SU_BOX = [['craft', 'Craft supporter', 'crafting and enhancement success x2'], ['s1', 'S1', 'free Destruction Protection'], ['s2', 'S2', 'attribute success x1.5 from +20'],
+    ['ap1', 'Ability P1', 'high Ability grades +50%'], ['pp1', 'Potential P1', 'high Potential grades +50%'], ['c1', 'C1', 'dungeon title rank-up x1.5']];
+  const setupChip = () => { const s = setup(); const parts = []; if (s.tier) parts.push('Tier ' + ROMAN(s.tier)); for (const [k, l] of SU_BOX) if (s[k]) parts.push(l); if (s.link) parts.push('Link ' + s.link);
+    return parts.length ? `<span class="su-chip">${esc(parts.join(' · '))}</span> <a href="#" data-su-reset class="small">Base values</a>` : ''; };
+  let suOpen = false;
+  const setupPanel = () => { const s = setup();
+    return `<div class="card su-panel"><div class="su-head"><b>My setup</b><span class="small">Chances and calculators follow it. Nothing set = base values, the same for everyone.</span><a href="#" data-su-close class="small">Close</a></div>
+    <div class="su-grid"><label class="su-f"><span>Supporter tier <span class="small">(drop, gold, EXP)</span></span><select data-su="tier">${TIER_PCT.map((p, n) => `<option value="${n}" ${n === s.tier ? 'selected' : ''}>${n ? `Tier ${ROMAN(n)} · +${p}%` : 'None'}</option>`).join('')}</select></label>
+    <label class="su-f"><span>Dimension Link points</span><input data-su="link" type="number" min="0" max="182" step="1" value="${s.link || ''}" placeholder="0" style="width:80px"></label>
+    ${SU_BOX.map(([k, l, d]) => `<label class="su-c"><input type="checkbox" data-su="${k}" ${s[k] ? 'checked' : ''}> <b>${esc(l)}</b> <span class="small">${esc(d)}</span></label>`).join('')}</div>
+    <p class="small" style="margin:6px 0 0">${setupChip() || 'Base values.'}</p></div>`; };
+  const setupDraw = () => { const c = document.getElementById('suChip'); if (c) c.innerHTML = setupChip(); const p = document.getElementById('suPanel'); if (p) { p.hidden = !suOpen; p.innerHTML = suOpen ? setupPanel() : ''; }
+    const b = document.getElementById('suBtn'); if (b) b.classList.toggle('on', suOpen || setupOn()); };
+  const setupSet = (k, v) => { const s = setup(); s[k] = v; const o = {}; for (const x in SETUP0) if (s[x] > 0) o[x] = s[x]; lsSet('cwgSetup', Object.keys(o).length ? JSON.stringify(o) : null); };
+  document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('#suBtn,[data-su-close],[data-su-reset]'); if (!t) return; e.preventDefault();
+    if (t.id === 'suBtn') suOpen = !suOpen; else if (t.hasAttribute('data-su-close')) suOpen = false; else lsSet('cwgSetup', null);
+    setupDraw(); if (!t.id) route(); });
+  document.addEventListener('change', e => { const k = e.target.dataset && e.target.dataset.su; if (!k) return; const v = e.target.type === 'checkbox' ? (e.target.checked ? 1 : 0) : Math.max(0, Math.round(+e.target.value || 0)); setupSet(k, v); setupDraw(); route(); });
+  window.addEventListener('cwgprofile', () => { setupDraw(); });
+
   const snapLive = () => { const o = {}; for (const k of PKEYS) { const v = lsGet(k); if (v != null) o[k] = v; } return o; };
   const loadLive = o => { for (const k of PKEYS) lsSet(k, o && o[k] != null ? o[k] : null); };
   const useProfile = (p, id) => { if (id !== p.cur) { p.data[p.cur] = snapLive(); loadLive(p.data[id] || {}); delete p.data[id]; p.cur = id; } saveProfs(p); window.dispatchEvent(new Event('cwgprofile')); };
@@ -140,5 +207,5 @@ window.WK = (function () {
   let VARMAP = null;
   const varKey = it => { const base = k => { const x = I[k]; return x ? (x.variant ? (x.family || x.name) : x.name) : k; }; const r = madeBy(it.id)[0]; const sig = r ? 'R:' + r.in.map(([k]) => base(k)).sort().join('+') : 'D:' + [...new Set((it.drops || []).map(x => x.m))].sort().join(','); return it.family + '|' + it.type + '|' + (it.level || 0) + '|' + sig; };
   const swapVar = (id, stat) => { const it = I[id]; if (!it || !it.variant || !stat || it.variant === stat) return id; if (!VARMAP) { VARMAP = {}; for (const x of Object.values(I)) if (x.variant) (VARMAP[varKey(x)] = VARMAP[varKey(x)] || {})[x.variant] = x.id; } const v = VARMAP[varKey(it)]; return v && v[stat] ? v[stat] : id; };
-  return { evCell, chanceHtml, statBar, profileBar, swapVar, GEAR_TYPES, W, I, M, R, Z, $, esc, link, fmt, pct, tag, icon, iname, ilink, statLine, tipHtml, madeBy, usedIn, mlink, zlink, rrow, rtable, gen, INDEX, KL, P, filters, hooks, route, start, subtabs, filterBox, tbl };
+  return { setup, setupOn, TIER_PCT, yourDrop, yourPct, dropPct, fx, evOn, evCell, chanceHtml, statBar, profileBar, swapVar, GEAR_TYPES, W, I, M, R, Z, $, esc, link, fmt, pct, tag, icon, iname, ilink, statLine, tipHtml, madeBy, usedIn, mlink, zlink, rrow, rtable, gen, INDEX, KL, P, filters, hooks, route, start, subtabs, filterBox, tbl };
 })();

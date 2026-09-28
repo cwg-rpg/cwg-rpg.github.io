@@ -5,22 +5,22 @@
   const ul = a => a && a.length ? `<ul>${a.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '';
   const TABS = [['overview', 'What is sold'], ['wings', 'Wings'], ['auras', 'Auras'], ['tiers', 'Supporter tiers']];
   const byGroup = g => S.flags.filter(x => x.group === g);
-  const TIERS = [[1, 8, 5], [2, 16, 8], [3, 24, 10], [4, 32, 12], [5, 44, 18], [6, 56, 25], [7, 68, 35], [8, 92, 40], [9, 116, 50], [10, 140, 60], [11, 170, 70], [12, 200, 90], [13, 230, 120], [14, 265, 150], [15, 300, 185], [16, 335, 220], [17, 370, 250], [18, 405, 280], [19, 440, 310], [20, 475, 340]];
-  const roman = n => ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX'][n];
+  const TIERS = [[1, 8, 5], [2, 16, 8], [3, 24, 10], [4, 32, 12], [5, 44, 18], [6, 56, 25], [7, 68, 35], [8, 92, 40], [9, 116, 50], [10, 140, 60], [11, 170, 70], [12, 200, 90], [13, 230, 120], [14, 265, 150], [15, 300, 185], [16, 335, 220], [17, 370, 250], [18, 405, 280], [19, 440, 310], [20, 475, 340], [21, 500, 370]];
+  const roman = n => ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI'][n];
   const overview = () => {
     const heroes = byGroup('hero'); const slots = S.flags.filter(x => x.group === 'slot'); const potion = S.flags.filter(x => x.group === 'potion');
-    return `<p class="small">Buy through a Discord ticket. Rewards are account-wide.</p>
+    return `<p class="small">Optional. It supports continued work on the map: Reforged compatibility, translations, fixes and updates. Buy through a Discord ticket. Rewards are account-wide.</p>
     <div class="grid">
-      <div class="card"><h3>Hero unlock - $20</h3><p>One supporter hero for your account. Hero swap $25, swap + unlock $35.</p><p class="small">${[...new Set(heroes.flatMap(h => (h.items || []).map(o => { const u = (W.heroes || []).find(x => x.id === o.id); return u ? u.lineage : ''; }).filter(Boolean)))].map(l => link('hero', l, l)).join(' · ')}</p><p>${link('heroes', '', 'Heroes')}</p></div>
+      <div class="card"><h3>Hero unlock - $20</h3><p>One supporter hero for your account. Hero swap $40.</p><p class="small">${[...new Set(heroes.flatMap(h => (h.items || []).map(o => { const u = (W.heroes || []).find(x => x.id === o.id); return u ? u.lineage : ''; }).filter(Boolean)))].map(l => link('hero', l, l)).join(' · ')}</p><p>${link('heroes', '', 'Heroes')}</p></div>
       <div class="card"><h3>Wings - $10 each</h3><p>+3% attack speed per wing you own. All 14 add another +20%.</p><p>${link('supporter?tab=wings', '', 'Wings')}</p></div>
       <div class="card"><h3>Auras - $10 each</h3><p>+3% damage per aura you own. All 14 add another +28%.</p><p>${link('supporter?tab=auras', '', 'Auras')}</p></div>
-      <div class="card"><h3>Pets - $15 each</h3><p>Only the equipped pet gives its bonus. Bonuses don't stack. Slot 2 is not for sale yet.</p><p>${link('pets', '', 'Pets')}</p></div>
+      <div class="card"><h3>Pets - $15 each</h3><p>Check each pet's bonus before choosing. Every pet you own gives its bonus, summoned or not.</p><p>${link('pets', '', 'Pets')}</p></div>
       <div class="card"><h3>Auto-Pot - $5</h3><p>Drinks your potion for you at 70% HP or lower. Heals 10% of max HP, 20% from level 100, 30% from level 500. 20 s cooldown.</p></div>
-      <div class="card"><h3>Stat slots - $10 / $15</h3><p>4th slot: buy it or unlock it free in game. 5th slot $10. Both for $15.</p></div>
+      <div class="card"><h3>Stat slots - $10 / $15</h3><p>The 4th and 5th slots unlock free in game through progression. To have them on every character: $10 for the 4th, $15 for both.</p></div>
     </div>
     <p>Permanent EXP / Gold / Drop bonuses are sold separately: ${link('supporter?tab=tiers', '', 'Supporter tiers')}.</p>`;
   };
-  const tiers = () => `<p>Permanent EXP / Gold / Drop bonus. Each tier is bought separately.</p><div class="tbl"><table><tr><th>Tier</th><th class="num">EXP / Gold / Drop</th><th class="num">Price</th></tr>${TIERS.map(([n, p, d]) => `<tr><td>Tier ${roman(n)}</td><td class="num">+${p}%</td><td class="num">$${d}</td></tr>`).join('')}</table></div><p class="small">No top tier. After Tier XVI at $220, each tier adds +35% EXP / Gold / Drop for +$30. The bonus caps at +1000%.</p>`;
+  const tiers = () => `<p>Permanent EXP / Gold / Drop bonus. Each tier is bought separately.</p><div class="tbl"><table><tr><th>Tier</th><th class="num">EXP / Gold / Drop</th><th class="num">Price</th></tr>${TIERS.map(([n, p, d]) => `<tr><td>Tier ${roman(n)}</td><td class="num">+${p}%</td><td class="num">$${d}</td></tr>`).join('')}</table></div><p class="small">Tier XXI is the current top tier.</p>`;
   const wings = () => `<div class="card hi"><h3>Permanent wing bonuses</h3><ul style="margin:0"><li>Per owned wing: +3% attack speed.</li><li>Own all 14 wings: another +20% attack speed.</li></ul></div><p class="small">The wing you show is cosmetic. w1 to w14 picks one, w0 is automatic, -wingoff hides it. A hidden wing keeps its bonus.</p>`;
   const auras = () => `<div class="card hi"><h3>Permanent aura bonuses</h3><ul style="margin:0"><li>Per owned aura: every attack deals 3% of your Strength + Agility + Intelligence as bonus damage.</li><li>Own all 14 auras: another 28%, 70% in total.</li></ul></div><p class="small">The aura you show is cosmetic. a1 to a14 picks one, a0 is automatic, -auraoff hides it, -auraon shows it again. A hidden aura keeps its bonus.</p>`;
   P.supporter = (_, f) => { const t = TABS.some(([k]) => k === f.tab) ? f.tab : 'overview'; return `<h2>Supporter</h2>${subtabs('supporter', 'tab', TABS, t)}${({ overview, wings, auras, tiers })[t](f)}`; };
