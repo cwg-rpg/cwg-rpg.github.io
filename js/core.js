@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 CWG RPG Wiki. All rights reserved. */
 /* CWG RPG Wiki - core: data access, shared helpers, search index, router. Pages register themselves on WK.P. */
 window.WK = (function () {
   const W = window.CWG, ICONS = window.CWG_ICONS || {};
