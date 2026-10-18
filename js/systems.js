@@ -2,10 +2,10 @@
 (function (K) {
   const { W, I, M, Z, esc, link, tag, fmt, ilink, mlink, gen, P, INDEX, KL, subtabs, tbl } = K;
   const SY = W.systems || {};
-  const NAMES = { attribute_enhancement: 'Attribute enhancement', relic_enhancement: 'Relic enhancement', ability_slots: 'Ability slots', potential: 'Potential', sailing: 'Sailing', party_dungeon: 'Party dungeon', awakening: 'Awakening', potions: 'Potions', stat_shop: 'Stat shop', hidden_items: 'Hidden items', dimension_link: 'Dimension Link' };
+  const NAMES = { attribute_enhancement: 'Attribute enhancement', relic_enhancement: 'Relic enhancement', ability_slots: 'Ability slots', potential: 'Potential', sailing: 'Sailing', party_dungeon: 'Party dungeon', awakening: 'Awakening', potions: 'Potions', stat_shop: 'Stat shop', hidden_items: 'Hidden items', dimension_link: 'Dimension Link', drop_odds: 'Drop Odds' };
   if (W.supporter && W.supporter.link && !SY.dimension_link) SY.dimension_link = { summary: W.supporter.link.summary + ' ' + (W.supporter.link.points || ''), tables: [{ title: 'Perks by points', columns: ['Points', 'Perk'], rows: (W.supporter.link.perks || []).map(p => [p.points, p.perk]) }] };
-  const SORDER = ['potions', 'stat_shop', 'awakening', 'ability_slots', 'attribute_enhancement', 'party_dungeon', 'potential', 'sailing', 'relic_enhancement', 'dimension_link'];
-  const KEYS0 = Object.keys(SY).filter(k => !['unverified', 'rules'].includes(k) && SY[k] && typeof SY[k] === 'object' && !Array.isArray(SY[k]));
+  const SORDER = ['drop_odds', 'potions', 'stat_shop', 'awakening', 'ability_slots', 'attribute_enhancement', 'party_dungeon', 'potential', 'sailing', 'relic_enhancement', 'dimension_link'];
+  const KEYS0 = Object.keys(SY).filter(k => !['unverified', 'rules', 'bestiary'].includes(k)   /* Bestiary has its own tab (js/bestiary.js) */ && SY[k] && typeof SY[k] === 'object' && !Array.isArray(SY[k]));
   const KEYS = [...KEYS0].sort((a, b) => (SORDER.indexOf(a) + 1 || 99) - (SORDER.indexOf(b) + 1 || 99));
   const cell = c => typeof c === 'object' && c && c.id ? (I[c.id] ? ilink(c.id) : M[c.id] ? mlink(c.id) : esc(c.name)) : esc(c);
   /* My setup: which column of which table changes, and the new values per row (null = nothing to change) */
@@ -79,6 +79,34 @@
     return `<h2>Guides</h2>${K.profileBar()}<div class="sub-tabs">${G.map(x => `<a href="#guides/${x.id}" class="${x.id === g.id ? 'on' : ''}">${esc(x.title)}</a>`).join('')}</div>${g.intro ? `<p class="small">${rich(g.intro)}</p>` : ''}${g.plain ? '' : `${K.statBar('stat', 'Items switch to this version')}<p><span class="small">☑ Tick steps as you go. A tick fills in everything above, an untick clears everything below. Early-game ticks carry over to the gear guide. Saved in this browser only</span></p>`}${secs.length > 1 ? subtabs('guides/' + g.id, 'gsec', secs.map(s => [s.h, s.h]), cur) : ''}<div class="card"><h3>${esc(g.title)}${secs.length > 1 ? ' · ' + esc(cur) : ''}</h3>${secs[si].table ? `<div class="tbl"><table><tr>${secs[si].table.columns.map(c => `<th>${esc(c)}</th>`).join('')}</tr>${secs[si].table.rows.map(r => `<tr>${r.map((c, ci) => `<td class="${ci === 0 ? 'num' : ci === 1 ? '' : 'small'}">${ci === 1 ? `<b>${esc(c)}</b>` : esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>` : stepsHtml(secs[si].steps, g.id + ':' + si)}</div>`;
   };
   const CHANGES = [   /* one entry per DAY (date only, no version numbers), newest first; every category once, in ORDER; merge same-day lines into that day */
+    ['19 Oct 2026', [
+      ['Monsters and items', [
+        'Wiki updated for the new map patch. Three new Primordial areas: Emerald Dream, Nozran and Noxstella, each with three field bosses. New raids: Ysera, Nozdormu and Galakrond.',
+        'New endgame gear: the Ordovis line up to Mordrek, new weapon, accessory and gem lines from the dragon essences and Ysera\'s Dreamwoven Gauntlets.',
+        'Every monster page shows its Bestiary chance and who rolls it. The Event Zone boss is now Woolball, the Fluffy Striker.',
+      ]],
+      ['Heroes', [
+        'Tier 3 is in: every hero page has a Tier 3 tab with stats, kit, transformation and how to unlock it. Every Tier 3 skill line was checked against the map.',
+      ]],
+      ['Tier list', [
+        'Marked outdated: ranks are still from the old map and Tier 3 is not ranked yet.',
+      ]],
+      ['Game systems', [
+        'Drop Rate is now Drop Odds: Fortune raises the odds instead of multiplying the chance (+100% turns 1% into 1.98%). Party size, the lobby Fame Aura, the Luck engraving and achievements all count. New Drop Odds page.',
+        'New Achievements and Bestiary tabs, both with search.',
+        'Attribute: +25 is a safe level now and Destruction Protection costs no Lumber on safe levels. Water and Nature grow every level, new effects from +30.',
+        'Ability slots 4 and 5 can be earned in play. Sailing Potential needs 15,000,000 base stat. Auto Potion turns on by itself after 100 potions.',
+        'Crafting needs every ingredient in one inventory: the hero or one backpack. Main stat stops at 10,000,000 until your account is verified on the Discord.',
+        'Events: ability roll and Sailing top-grade boosts, half-cost ability rolls, attribute x2 and crafting x2 are live. Awakening, Potential and voyage essence events are off.',
+      ]],
+      ['Calculators', [
+        'Drop chance and My setup use Fortune: players in game, lobby Fame Aura, Luck level and achievements, or just type your -economy number.',
+      ]],
+      ['Whole wiki', [
+        'Supporter and Commands tabs removed, Bestiary takes their place. New Home page cards.',
+        'Window commands like -attribute, -relic, -party and -travel are gone from the map: open those windows with the HUD buttons.',
+      ]],
+    ]],
     ['28 Sep 2026', [
       ['Monsters and items', [
         'Item stats now come from the map data, not the tooltip text. One item differs: Valhalla [STR] really gives AGI +200,000.',

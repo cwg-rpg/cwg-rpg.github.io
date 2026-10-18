@@ -29,6 +29,7 @@ li{margin:3px 0}
 code{font-family:var(--mono);font-size:.86em;background:var(--code);padding:1px 5px;border-radius:3px}
 a{color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--accent)}a:hover{border-bottom-style:solid}
 .card{background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;margin:12px 0}
+.outdated{margin:8px 0 14px;padding:14px 16px;border:3px solid var(--bad);border-radius:10px;background:rgba(224,106,106,.13);color:var(--bad);font:800 34px/1.1 Fraunces,Georgia,serif;letter-spacing:.06em;text-align:center}.outdated span{display:block;margin-top:6px;font:600 14px/1.4 system-ui,sans-serif;letter-spacing:0;color:var(--ink)}.outdated-tag{color:var(--bad);font-weight:800;letter-spacing:.04em}
 .card.hi{border-left:4px solid var(--accent)}.card.warn{border:2px solid var(--warn);border-left:6px solid var(--warn);background:#2a2412}.card.warn b{color:var(--warn)}.warntext{color:var(--warn);font-weight:600}
 .banner{display:block;box-shadow:0 0 0 1px var(--rule),0 12px 40px rgba(0,0,0,.6);width:100%;height:auto;max-height:370px;object-fit:cover;object-position:center 50%;border-radius:8px;margin:0 0 10px}.vh{position:absolute;left:-9999px}
 .sys-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media (max-width:760px){.sys-grid{grid-template-columns:1fr}}.sys-grid .card{margin:0}.sys-grid.one{grid-template-columns:1fr}.sys-grid .card.tips{background:linear-gradient(135deg,#2a2412 0%,var(--paper) 70%);border-color:#6b5423;border-left:4px solid var(--warn)}.card.tips h4{color:var(--warn);display:flex;align-items:center;gap:6px}.card.tips h4 svg{width:17px;height:17px;flex:none}.card.tips li{margin:3px 0}.card.tips .tip-list{margin:3px 0 0;padding-left:18px;list-style:disc}.card.tips .tip-list li{margin:1px 0}.card.tips li::marker{color:var(--warn)}.sys-grid ol,.sys-grid ul{margin:0}.tbl.compact table{font-size:13px}.tbl.fit table{width:auto;max-width:100%}.tbl.compact th,.tbl.compact td{padding:4px 7px}
@@ -97,10 +98,10 @@ input.gstep{width:20px;height:20px;accent-color:var(--accent);cursor:pointer;mar
 <div class="wrap">
 <a href="#home" style="border:none"><img class="banner" src="img_banner.jpg" alt="CWG RPG - Covenant of Warring Gods"></a>
 <h1 class="vh">CWG RPG Wiki</h1>
-<p class="sub"><img src="img_map.png" alt="" style="width:28px;height:28px;vertical-align:-8px;margin-right:6px;border-radius:4px">Map version 1.1.0<span id="upd"></span></p>
+<p class="sub"><img src="img_map.png" alt="" style="width:28px;height:28px;vertical-align:-8px;margin-right:6px;border-radius:4px">Map version 1.2.2<span id="upd"></span></p>
 <div class="search"><input id="q" type="search" placeholder="search an item, monster, zone, hero, command ..." autofocus><span class="small" id="qcount"></span></div>
 <nav class="tabs" id="tabs">
-<a href="#home">Home</a><a href="#zones">Zones</a><a href="#monsters">Monsters</a><a href="#items">Items</a><a href="#recipes">Recipes</a><a href="#heroes">Heroes</a><a href="#tierlist">Tier List</a><a href="#systems">Game Systems</a><a href="#events">Events</a><a href="#supporter">Supporter</a><a href="#pets">Pets</a><a href="#guides">Guides</a><a href="#planner">Planner</a><a href="#calc">Calculators</a><a href="#commands">Commands</a>
+<a href="#home">Home</a><a href="#zones">Zones</a><a href="#monsters">Monsters</a><a href="#items">Items</a><a href="#recipes">Recipes</a><a href="#heroes">Heroes</a><a href="#tierlist">Tier List</a><a href="#systems">Game Systems</a><a href="#achievements">Achievements</a><a href="#bestiary">Bestiary</a><a href="#events">Events</a><a href="#pets">Pets</a><a href="#guides">Guides</a><a href="#planner">Planner</a><a href="#calc">Calculators</a>
 </nav>
 <div id="out"></div>
 <p class="small" style="margin-top:32px;border-top:1px solid var(--rule);padding-top:10px"><a href="#credits">Credits</a> · <a href="#changelog">Changelog</a></p>
@@ -114,6 +115,8 @@ input.gstep{width:20px;height:20px;accent-color:var(--accent);cursor:pointer;mar
 <script src="js/heroes.js"></script>
 <script src="js/supporter.js"></script>
 <script src="js/systems.js"></script>
+<script src="js/achievements.js"></script>
+<script src="js/bestiary.js"></script>
 <script src="js/tools.js"></script>
 <script src="js/planner.js"></script>
 <script>WK.start();</script>

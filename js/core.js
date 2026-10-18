@@ -109,14 +109,33 @@ window.WK = (function () {
      Nothing set = base values everywhere (what a new visitor sees). Pages read K.setup() and show "base -> yours". ---- */
   const TIER_PCT = [0, 8, 16, 24, 32, 44, 56, 68, 92, 116, 140, 170, 200, 230, 265, 300, 335, 370, 405, 440, 475, 500];   /* Supporter page tiers (owner's menu, Tier XXI top since 2026-09-28) */
   const ROMAN = n => ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI'][n] || String(n);
+  /* Drop ODDS (map 1.2.2): Fortune raises the odds of a drop, not the chance: chance = 100 b m / (100 - b + b m), b = base %, m = 1 + Fortune/100.
+     Fortune (%) = Fame tier rate + 5 x players in the game + best Fame Aura in the lobby + Luck engraving level + achievement Fortune, or the number the viewer reads off -economy.
+     The event items in W.drop_odds.event_items keep their base chance. */
+  const DO = W.drop_odds || {};
+  const EVENT_IDS = new Set(DO.event_items || []);
+  const PARTY_PCT = DO.party_pct != null ? DO.party_pct : 5, PARTY_MAX = DO.party_max || 12, AURA_MAX = DO.aura_max != null ? DO.aura_max : 75, LUCK_MAX = DO.luck_max != null ? DO.luck_max : 25, ACH_MAX = DO.ach_max != null ? DO.ach_max : 120, ECON_MAX = 100000;
   const SETUP0 = { tier: 0, craft: 0, s1: 0, s2: 0, ap1: 0, pp1: 0, c1: 0, link: 0 };
-  const setup = () => { let s = {}; try { s = JSON.parse(lsGet('cwgSetup') || '{}') || {}; } catch (e) { } const o = Object.assign({}, SETUP0);
-    for (const k in SETUP0) o[k] = Math.max(0, Math.round(+s[k] || 0)); o.tier = Math.min(TIER_PCT.length - 1, o.tier); o.link = Math.min(182, o.link); o.drop = TIER_PCT[o.tier]; return o; };
-  /* drop chance with the setup's rate bonus: same rule as the drop calculator (chance x (1 + bonus%), capped at 100) */
-  const yourDrop = c => Math.min(100, c * (1 + setup().drop / 100));
-  /* show a chance as 'yours' with the base struck through, or just the base when nothing changes */
-  /* any drop chance on any list: yours (supporter tier) with the base struck, or just the base when no tier is set */
-  const dropPct = c => setup().drop ? yourPct(c, yourDrop(c)) : pct(c);
+  const SKEYS = Object.keys(SETUP0).concat(['party', 'aura', 'luck', 'achF', 'econ']);   /* every saved field; party 1 and the others 0 = not set */
+  const r2 = (v, hi) => { v = +v; if (!isFinite(v)) v = 0; return Math.min(hi, Math.max(0, Math.round(v * 100) / 100)); };
+  let suRaw = null, suVal = null;
+  const setup = () => { const raw = lsGet('cwgSetup') || ''; if (raw === suRaw && suVal) return Object.assign({}, suVal);
+    let s = {}; try { s = JSON.parse(raw || '{}') || {}; } catch (e) { } const o = Object.assign({}, SETUP0);
+    for (const k in SETUP0) o[k] = Math.max(0, Math.round(+s[k] || 0)); o.tier = Math.min(TIER_PCT.length - 1, o.tier); o.link = Math.min(182, o.link);
+    o.party = Math.min(PARTY_MAX, Math.max(1, Math.round(+s.party || 1))); o.aura = r2(s.aura, AURA_MAX); o.luck = Math.min(LUCK_MAX, Math.round(r2(s.luck, LUCK_MAX))); o.achF = r2(s.achF, ACH_MAX); o.econ = r2(s.econ, ECON_MAX);
+    o.fortune = Math.round((o.econ > 0 ? o.econ : TIER_PCT[o.tier] + PARTY_PCT * o.party + o.aura + o.luck + o.achF) * 100) / 100;
+    o.dropOn = o.econ > 0 || o.tier > 0 || o.party > 1 || o.aura > 0 || o.luck > 0 || o.achF > 0;   /* nothing set = base chances */
+    o.drop = o.dropOn ? o.fortune : 0;   /* Fortune % in effect, 0 = show base chances */
+    suRaw = raw; suVal = o; return Object.assign({}, o); };
+  /* odds formula from the map (CWGDropChanceFromOdds): base b % and Fortune f % -> chance % */
+  const oddsChance = (b, f) => { if (!(b > 0)) return 0; if (b >= 100) return 100; if (!f) return b; const m = 1 + f / 100; if (m <= 0) return 0; return 100 * b * m / (100 - b + b * m); };
+  const isEventItem = id => EVENT_IDS.has(id);
+  /* chance with an explicit Fortune; event items never get it */
+  const dropAt = (c, f, id) => id != null && EVENT_IDS.has(id) ? c : oddsChance(c, f);
+  /* drop chance of item `id` with the setup's Fortune (pass the item id so event items keep their base chance) */
+  const yourDrop = (c, id) => dropAt(c, setup().drop, id);
+  /* any drop chance on any list: yours (Fortune set) with the base struck through, or just the base when nothing is set / for event items */
+  const dropPct = (c, id) => setup().drop ? yourPct(c, yourDrop(c, id)) : pct(c);
   const yourPct = (base, yours) => yours == null || Math.abs(yours - base) < 1e-12 ? pct(base) : `<span class="yv">${pct(yours)}</span><span class="yb">${pct(base)}</span>`;
 
   /* setup math, ported from the map (findings/checks/setup_formulas.md). Event switches are read from the live events list, so a new map version keeps working. */
@@ -150,25 +169,37 @@ window.WK = (function () {
     /* dungeon title rank-up chance per clear (%): C1 x1.5 */
     title: p => Math.min(100, p * (setup().c1 ? 1.5 : 1)),
   };
-  const setupOn = () => { const s = setup(); return Object.keys(SETUP0).some(k => s[k] > 0); };
+  const setupOn = () => { const s = setup(); return Object.keys(SETUP0).some(k => s[k] > 0) || s.dropOn; };
   const SU_BOX = [['craft', 'Craft supporter', 'crafting and enhancement success x2'], ['s1', 'S1', 'free Destruction Protection'], ['s2', 'S2', 'attribute success x1.5 from +20'],
     ['ap1', 'Ability P1', 'high Ability grades +50%'], ['pp1', 'Potential P1', 'high Potential grades +50%'], ['c1', 'C1', 'dungeon title rank-up x1.5']];
-  const setupChip = () => { const s = setup(); const parts = []; if (s.tier) parts.push('Tier ' + ROMAN(s.tier)); for (const [k, l] of SU_BOX) if (s[k]) parts.push(l); if (s.link) parts.push('Link ' + s.link);
+  const setupChip = () => { const s = setup(); const parts = []; if (s.tier) parts.push('Tier ' + ROMAN(s.tier)); if (s.dropOn) parts.push('Fortune +' + fmt(s.fortune) + '%'); for (const [k, l] of SU_BOX) if (s[k]) parts.push(l); if (s.link) parts.push('Link ' + s.link);
     return parts.length ? `<span class="su-chip">${esc(parts.join(' · '))}</span> <a href="#" data-su-reset class="small">Base values</a>` : ''; };
+  /* Fortune inputs: key, label, hover hint, min, max, step, decimals allowed, placeholder */
+  const FORT_BOX = [['party', 'Players in game', 'Human players in the lobby, +' + PARTY_PCT + '% Fortune each (1 to ' + PARTY_MAX + ')', 1, PARTY_MAX, 1, 0, '1'],
+    ['aura', 'Lobby Fame Aura %', 'The highest Fame Aura among the players in the lobby (0 to ' + AURA_MAX + '%)', 0, AURA_MAX, 0.25, 1, '0'],
+    ['luck', 'Luck engraving level', 'Permanent Engraving Luck, +1% Fortune per level (0 to ' + LUCK_MAX + ')', 0, LUCK_MAX, 1, 0, '0'],
+    ['achF', 'Achievement Fortune %', 'Fortune from your earned achievements (0 to ' + ACH_MAX + '%)', 0, ACH_MAX, 0.25, 1, '0'],
+    ['econ', 'Fortune from -economy %', 'Optional: type the Fortune % that the -economy chat command shows. When filled it replaces the sum above.', 0, ECON_MAX, 'any', 1, 'optional']];
+  const fortuneLine = s => { if (!s.dropOn) return 'Fortune: not set, chances show their base values.';
+    const parts = s.econ > 0 ? ['from -economy'] : [s.tier ? 'tier +' + fmt(TIER_PCT[s.tier]) + '%' : '', 'players +' + fmt(PARTY_PCT * s.party) + '%', s.aura ? 'Aura +' + fmt(s.aura) + '%' : '', s.luck ? 'Luck +' + fmt(s.luck) + '%' : '', s.achF ? 'achievements +' + fmt(s.achF) + '%' : ''].filter(Boolean);
+    return `Fortune +${fmt(s.fortune)}% <span class="small">(${parts.join(', ')})</span> · base 1% becomes ${pct(oddsChance(1, s.fortune))}, base 20% becomes ${pct(oddsChance(20, s.fortune))}.`; };
   let suOpen = false;
   const setupPanel = () => { const s = setup();
     return `<div class="card su-panel"><div class="su-head"><b>My setup</b><span class="small">Chances and calculators follow it. Nothing set = base values, the same for everyone.</span><a href="#" data-su-close class="small">Close</a></div>
-    <div class="su-grid"><label class="su-f"><span>Supporter tier <span class="small">(drop, gold, EXP)</span></span><select data-su="tier">${TIER_PCT.map((p, n) => `<option value="${n}" ${n === s.tier ? 'selected' : ''}>${n ? `Tier ${ROMAN(n)} · +${p}%` : 'None'}</option>`).join('')}</select></label>
+    <div class="su-grid"><label class="su-f"><span>Supporter tier <span class="small">(Fortune, gold, EXP)</span></span><select data-su="tier">${TIER_PCT.map((p, n) => `<option value="${n}" ${n === s.tier ? 'selected' : ''}>${n ? `Tier ${ROMAN(n)} · +${p}%` : 'None'}</option>`).join('')}</select></label>
     <label class="su-f"><span>Dimension Link points</span><input data-su="link" type="number" min="0" max="182" step="1" value="${s.link || ''}" placeholder="0" style="width:80px"></label>
     ${SU_BOX.map(([k, l, d]) => `<label class="su-c"><input type="checkbox" data-su="${k}" ${s[k] ? 'checked' : ''}> <b>${esc(l)}</b> <span class="small">${esc(d)}</span></label>`).join('')}</div>
+    <p class="small" style="margin:8px 0 2px"><b>Fortune</b> (drop odds). Event items ignore it.</p>
+    <div class="su-grid">${FORT_BOX.map(([k, l, tip, lo, hi, step, dec, ph]) => `<label class="su-f" title="${esc(tip)}"><span>${esc(l)}</span><input data-su="${k}" ${dec ? 'data-dec="1" ' : ''}type="number" min="${lo}" max="${hi}" step="${step}" value="${s[k] > lo || (k === 'party' && s[k] > 1) ? s[k] : ''}" placeholder="${esc(ph)}" style="width:80px"></label>`).join('')}</div>
+    <p class="small" style="margin:6px 0 0">${fortuneLine(s)}</p>
     <p class="small" style="margin:6px 0 0">${setupChip() || 'Base values.'}</p></div>`; };
   const setupDraw = () => { const c = document.getElementById('suChip'); if (c) c.innerHTML = setupChip(); const p = document.getElementById('suPanel'); if (p) { p.hidden = !suOpen; p.innerHTML = suOpen ? setupPanel() : ''; }
     const b = document.getElementById('suBtn'); if (b) b.classList.toggle('on', suOpen || setupOn()); };
-  const setupSet = (k, v) => { const s = setup(); s[k] = v; const o = {}; for (const x in SETUP0) if (s[x] > 0) o[x] = s[x]; lsSet('cwgSetup', Object.keys(o).length ? JSON.stringify(o) : null); };
+  const setupSet = (k, v) => { const s = setup(); s[k] = v; const o = {}; for (const x of SKEYS) if (x === 'party' ? s[x] > 1 : s[x] > 0) o[x] = s[x]; lsSet('cwgSetup', Object.keys(o).length ? JSON.stringify(o) : null); };
   document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('#suBtn,[data-su-close],[data-su-reset]'); if (!t) return; e.preventDefault();
     if (t.id === 'suBtn') suOpen = !suOpen; else if (t.hasAttribute('data-su-close')) suOpen = false; else lsSet('cwgSetup', null);
     setupDraw(); if (!t.id) route(); });
-  document.addEventListener('change', e => { const k = e.target.dataset && e.target.dataset.su; if (!k) return; const v = e.target.type === 'checkbox' ? (e.target.checked ? 1 : 0) : Math.max(0, Math.round(+e.target.value || 0)); setupSet(k, v); setupDraw(); route(); });
+  document.addEventListener('change', e => { const k = e.target.dataset && e.target.dataset.su; if (!k) return; const v = e.target.type === 'checkbox' ? (e.target.checked ? 1 : 0) : e.target.dataset.dec ? Math.max(0, Math.round((+e.target.value || 0) * 100) / 100) : Math.max(0, Math.round(+e.target.value || 0)); setupSet(k, v); setupDraw(); route(); });
   window.addEventListener('cwgprofile', () => { setupDraw(); });
 
   const snapLive = () => { const o = {}; for (const k of PKEYS) { const v = lsGet(k); if (v != null) o[k] = v; } return o; };
@@ -208,5 +239,5 @@ window.WK = (function () {
   let VARMAP = null;
   const varKey = it => { const base = k => { const x = I[k]; return x ? (x.variant ? (x.family || x.name) : x.name) : k; }; const r = madeBy(it.id)[0]; const sig = r ? 'R:' + r.in.map(([k]) => base(k)).sort().join('+') : 'D:' + [...new Set((it.drops || []).map(x => x.m))].sort().join(','); return it.family + '|' + it.type + '|' + (it.level || 0) + '|' + sig; };
   const swapVar = (id, stat) => { const it = I[id]; if (!it || !it.variant || !stat || it.variant === stat) return id; if (!VARMAP) { VARMAP = {}; for (const x of Object.values(I)) if (x.variant) (VARMAP[varKey(x)] = VARMAP[varKey(x)] || {})[x.variant] = x.id; } const v = VARMAP[varKey(it)]; return v && v[stat] ? v[stat] : id; };
-  return { setup, setupOn, TIER_PCT, yourDrop, yourPct, dropPct, fx, evOn, evCell, chanceHtml, statBar, profileBar, swapVar, GEAR_TYPES, W, I, M, R, Z, $, esc, link, fmt, pct, tag, icon, iname, ilink, statLine, tipHtml, madeBy, usedIn, mlink, zlink, rrow, rtable, gen, INDEX, KL, P, filters, hooks, route, start, subtabs, filterBox, tbl };
+  return { setup, setupOn, TIER_PCT, oddsChance, dropAt, isEventItem, yourDrop, yourPct, dropPct, fx, evOn, evCell, chanceHtml, statBar, profileBar, swapVar, GEAR_TYPES, W, I, M, R, Z, $, esc, link, fmt, pct, tag, icon, iname, ilink, statLine, tipHtml, madeBy, usedIn, mlink, zlink, rrow, rtable, gen, INDEX, KL, P, filters, hooks, route, start, subtabs, filterBox, tbl };
 })();
