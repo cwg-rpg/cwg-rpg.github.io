@@ -102,6 +102,9 @@
       ['Calculators', [
         'Drop chance and My setup use Fortune: players in game, lobby Fame Aura, Luck level and achievements, or just type your -economy number.',
       ]],
+      ['Guides', [
+        'Gear progression runs to the new endgame: the dragon-essence weapon, armor and accessory lines, Ysera\'s Dreamwoven Gauntlets and the Hidden chain up to Mordrek. The planner follows the same routes.',
+      ]],
       ['Whole wiki', [
         'Supporter and Commands tabs removed, Bestiary takes their place. New Home page cards.',
         'Window commands like -attribute, -relic, -party and -travel are gone from the map: open those windows with the HUD buttons.',
