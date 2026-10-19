@@ -88,7 +88,7 @@
       ['Heroes', [
         'Tier 3 is in: every hero page has a Tier 3 tab with stats, kit, transformation and how to unlock it. Every Tier 3 skill line was checked against the map.',
         'Tier 1 and 2 kits rechecked for the patch: Frenzy, Annihilation, Crimson Night, Dark Ghost, Emberclaw, Cinderstar, Nature and Frostveil lines updated (Annihilation volleys x10 / x12, clones no longer proc, Nature\'s leap taunts). Every tier shows HP, attack, armor and move speed in one line.',
-        'Tier 2 and 3 tabs show what changed from the tier below: arrows on the stats and a small chip on every skill (x10 → x12, new, same as Tier 2). Open a skill for its numbers across all tiers.',
+        'Tier 2 and 3 tabs show what changed from the tier below: arrows on the stats and a small chip on every skill (x10 → x12, new, same as Tier 2). Open a skill for its numbers across all tiers. Transformations too (Abyss, Moonlit Night, Nature, Lightning), with their form lines rechecked.',
       ]],
       ['Tier list', [
         'Marked outdated: ranks are still from the old map and Tier 3 is not ranked yet. Hero pages hide their ranks until the new list is out.',
