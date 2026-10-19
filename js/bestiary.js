@@ -1,20 +1,32 @@
-/* Bestiary tab (map 1.2.2, own tab since 2026-10-19, user): page text + tables from the Game Systems JSON, then every entry by realm */
+/* Bestiary tab (map 1.2.2, own tab since 2026-10-19, user): one intro line, a chance strip, the boosted effects folded,
+   then one fold per realm with its monsters as name pills by type (compact pass 2026-10-19, user: "too long") */
 (function (K) {
-  const { W, M, esc, mlink, subtabs, filterBox, P, INDEX, KL } = K;
+  const { W, M, esc, link, filterBox, P, INDEX, KL } = K;
   const B = W.bestiary, PG = (W.systems || {}).bestiary; if (!B || !PG) return;
   const E = Object.entries(B.entries || {}).map(([id, e]) => ({ id, ...e })).filter(e => M[e.id]);
   const REALMS = [...new Set(E.map(e => e.realm))];
-  const RANK = { Normal: 0, Colossal: 1, Named: 2, Raid: 3 };
-  const pct = v => (v < 0.01 ? v.toFixed(3) : v < 1 ? +v.toFixed(2) : +v.toFixed(1)) + '%';
-  const SKIP = /^Milestones$/;   /* every 10% = +5% is already in the intro line */
-  const table = t => `<h4>${esc(t.title || '')}</h4><div class="tbl compact${(t.columns || []).length <= 3 ? ' fit' : ''}"><table><tr>${(t.columns || []).map(c => `<th>${esc(c)}</th>`).join('')}</tr>${(t.rows || []).map(r => `<tr>${r.map(c => `<td class="${typeof c === 'number' ? 'num' : ''}">${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>`;
+  const TYPES = ['Normal', 'Colossal', 'Named', 'Raid'];
+  const T = PG.tables || [], byTitle = re => T.find(t => re.test(t.title || ''));
+  const CH = byTitle(/chance/i), BO = byTitle(/boosted/i), RE = byTitle(/^Realms/i);
+  const chance = {}; for (const r of (CH ? CH.rows : [])) chance[r[0]] = { pct: r[1], who: String(r[2]).replace(/^Player who gets the kill$/, 'killer only').replace(/^Heroes within/, 'heroes within') };
+  const reward = {}; for (const r of (RE ? RE.rows : [])) if (!/^None/.test(r[r.length - 1])) reward[r[0]] = r[r.length - 1];
+  const short = n => n.replace(/^\[[^\]]*\]\s*/, '');
   P.bestiary = (id, f) => {
-    const realm = REALMS.includes(f.realm) ? f.realm : REALMS[0]; const q0 = f.q || id || ''; const q = q0.toLowerCase();
-    const rows = E.filter(e => q ? M[e.id].name.toLowerCase().includes(q) : e.realm === realm).sort((a, b) => (RANK[a.rarity] ?? 9) - (RANK[b.rarity] ?? 9) || M[a.id].name.localeCompare(M[b.id].name));
-    return `<h2>Bestiary</h2><p>${esc(PG.what || '')}${PG.open ? ` <span class="small">· ${esc(PG.open)}</span>` : ''}</p>
-      ${(PG.tables || []).filter(t => !SKIP.test(t.title || '')).map(table).join('')}
-      <h3>Entries</h3>${q ? '' : subtabs('bestiary', 'realm', REALMS.map(r => [r, `${r} (${E.filter(e => e.realm === r).length})`]), realm)}${filterBox('search a monster in every realm', q0)}
-      <div class="tbl compact"><table class="sortable"><tr><th>Monster</th>${q ? '<th>Realm</th>' : ''}<th>Type</th><th class="num">Chance per kill</th></tr>${rows.map(e => `<tr><td>${mlink(e.id)}</td>${q ? `<td class="small">${esc(e.realm)}</td>` : ''}<td class="small">${esc(e.rarity)}</td><td class="num">${pct(e.chance_pct)}</td></tr>`).join('')}</table></div>`;
+    const q0 = f.q || id || ''; const q = q0.toLowerCase();
+    const hit = e => !q || M[e.id].name.toLowerCase().includes(q);
+    const strip = `<div class="bx-ch">${TYPES.filter(t => chance[t]).map(t => `<div><b>${t}</b><span class="bx-p">${esc(chance[t].pct)}</span><span class="small">${esc(chance[t].who)}</span></div>`).join('')}</div>`;
+    const boost = BO ? `<details class="zfold bx-bo"><summary><span>What the bonus boosts</span><span class="zf-c">${BO.rows.map(r => esc(r[0].replace(/\s*\(.*\)$/, ''))).join(' · ')}</span></summary><div class="tbl compact"><table><tr>${BO.columns.map(c => `<th>${esc(c)}</th>`).join('')}</tr>${BO.rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>${BO.note ? `<p class="small" style="margin:0 12px 10px">${esc(BO.note)}</p>` : ''}</details>` : '';
+    let shown = 0;
+    const folds = REALMS.map(r => {
+      const all = E.filter(e => e.realm === r), list = all.filter(hit); if (q && !list.length) return ''; shown += list.length;
+      const cnt = TYPES.filter(t => all.some(e => e.rarity === t)).map(t => `${all.filter(e => e.rarity === t).length} ${t}`).join(' · ');
+      const rows = TYPES.map(t => { const xs = list.filter(e => e.rarity === t).sort((a, b) => short(M[a.id].name).localeCompare(short(M[b.id].name)));
+        return xs.length ? `<div class="bx-t"><span class="bx-tl">${t}${chance[t] ? ` <i>${esc(chance[t].pct)}</i>` : ''}</span><span class="bx-ns">${xs.map(e => link('monster', e.id, short(M[e.id].name))).join('')}</span></div>` : ''; }).join('');
+      return `<details class="zfold"${q ? ' open' : ''}><summary><span>${esc(r)} <span class="small">${q ? list.length + ' of ' : ''}${all.length}</span></span><span class="zf-c">${reward[r] ? `<span class="bx-rw">Register all ${all.length} to unlock: ${esc(reward[r])}</span>` : cnt}</span></summary>${rows}</details>`;
+    }).join('');
+    return `<h2>Bestiary</h2><p>${esc(PG.what || '')}${PG.open ? ` <span class="small">${esc(PG.open)}</span>` : ''}</p>
+      <h4>Register chance per kill</h4>${strip}${boost}
+      <h3>Monsters by realm</h3>${filterBox('search a monster in every realm', q0)}${q ? `<p class="small">${shown} found.</p>` : ''}<div class="zfolds">${folds}</div>`;
   };
   KL.bestiary = 'Bestiary';
   INDEX.push({ k: 'bestiary', id: '', t: 'Bestiary', s: 'monster collection · +50% to Potential, Attribute and Relic effects', w: 3 });

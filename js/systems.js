@@ -87,6 +87,7 @@
       ]],
       ['Heroes', [
         'Tier 3 is in: every hero page has a Tier 3 tab with stats, kit, transformation and how to unlock it. Every Tier 3 skill line was checked against the map.',
+        'Tier 1 and 2 kits rechecked for the patch: Frenzy, Annihilation, Crimson Night and Dark Ghost lines updated (Annihilation volleys x10 / x12, clones no longer proc). Every tier shows HP, attack, armor and move speed in one line.',
       ]],
       ['Tier list', [
         'Marked outdated: ranks are still from the old map and Tier 3 is not ranked yet.',
@@ -107,6 +108,7 @@
       ]],
       ['Whole wiki', [
         'Supporter and Commands tabs removed, Bestiary takes their place. New Home page cards.',
+        'Bestiary, Achievements and Pets cleaned up: realm and boss folds, one row per boss with every kill reward, rules folded away. Rembol heals only on hits now.',
         'Window commands like -attribute, -relic, -party and -travel are gone from the map: open those windows with the HUD buttons.',
       ]],
     ]],
