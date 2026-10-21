@@ -93,6 +93,7 @@
         'Fairer math: crits only land on basic attacks, skills that scale on your other stats or All Stats use those stats, and mana regen fills every mana bar.',
         'Cleaner page: one list with no stages, no Solo ranking, no pet box and no Survives or Dies label. Auto Potion is free for everyone, so every hero lasts AFK.',
         'New What this list assumes card: the full setup, plus what Party and Party + Supporter add.',
+        'Hero notes and "Only hero with" chips are gone from the list and the hero pages: the kit tabs show what each hero does.',
       ]],
       ['Whole wiki', [
         'Updated to map 1.2.3.',
