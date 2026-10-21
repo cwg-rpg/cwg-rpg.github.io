@@ -23,7 +23,7 @@
       ${card('items', 'Items', `${Object.keys(I).length.toLocaleString()} items by zone or type: stats, sources, recipes`)}
       ${card('recipes', 'Recipes', `${(W.recipe_groups || []).length} crafting recipes and enhancement chains`)}
       ${card('heroes', 'Heroes', `${[...new Set((W.heroes || []).map(h => h.lineage))].length} heroes with tier 1, 2 and 3 abilities`)}
-      ${card('tierlist', 'Tier list', 'Grades by stage. Made for the old map, Tier 3 not ranked yet')}
+      ${card('tierlist', 'Tier list', 'Tier 3 of every hero at best in slot: boss, AoE, AFK farm, utility, survival')}
       ${card('guides', 'Guides', 'Early game route and gear progression by slot, with checklists')}
       ${card('systems', 'Game systems', 'Drop Odds, potions, stat shops, awakening, slots, attributes, party dungeons, potential, sailing, relics, Dimension Link')}
       ${card('achievements', 'Achievements', `${((W.achievements || {}).list || []).length} journal entries and the bonuses they pay`)}

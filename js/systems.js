@@ -79,6 +79,26 @@
     return `<h2>Guides</h2>${K.profileBar()}<div class="sub-tabs">${G.map(x => `<a href="#guides/${x.id}" class="${x.id === g.id ? 'on' : ''}">${esc(x.title)}</a>`).join('')}</div>${g.intro ? `<p class="small">${rich(g.intro)}</p>` : ''}${g.plain ? '' : `${K.statBar('stat', 'Items switch to this version')}<p><span class="small">☑ Tick steps as you go. A tick fills in everything above, an untick clears everything below. Early-game ticks carry over to the gear guide. Saved in this browser only</span></p>`}${secs.length > 1 ? subtabs('guides/' + g.id, 'gsec', secs.map(s => [s.h, s.h]), cur) : ''}<div class="card"><h3>${esc(g.title)}${secs.length > 1 ? ' · ' + esc(cur) : ''}</h3>${secs[si].table ? `<div class="tbl"><table><tr>${secs[si].table.columns.map(c => `<th>${esc(c)}</th>`).join('')}</tr>${secs[si].table.rows.map(r => `<tr>${r.map((c, ci) => `<td class="${ci === 0 ? 'num' : ci === 1 ? '' : 'small'}">${ci === 1 ? `<b>${esc(c)}</b>` : esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>` : stepsHtml(secs[si].steps, g.id + ':' + si)}</div>`;
   };
   const CHANGES = [   /* one entry per DAY (date only, no version numbers), newest first; every category once, in ORDER; merge same-day lines into that day */
+    ['21 Oct 2026', [
+      ['Heroes', [
+        'Hero pages show their tier list ranks again, now for Tier 3: Boss, AoE, AFK farm, Utility and Survival, plus the How it\'s scored tab with every damage, party and survival part.',
+      ]],
+      ['Tier list', [
+        'Rebuilt for the new patch: all 26 heroes ranked at Tier 3 with best in slot gear and every system maxed.',
+        'Every Tier 3 kit modelled from the map code: procs, crits, clones, forms, mana bars, taunts and party effects.',
+        'Patch changes counted: Crimson Night and Dark Ghost clones no longer fire skill procs, zones 34 to 36 set monster HP and boss armor, weapon and accessory enhancement procs go up to +30, and the Bestiary bonus counts at 100%.',
+        'Tank means a taunt plus its own damage reduction, no evasion luck, so Nature stays the only Tank and the only taunt that counts for Party utility.',
+        'Survival fixed: short immunity windows count half against one big hit, like evasion, and a weight bug that capped every score at 90 is gone.',
+        'Party + Supporter now also counts the donation slots: Potential 5 and Sailing 7.',
+        'Fairer math: crits only land on basic attacks, skills that scale on your other stats or All Stats use those stats, and mana regen fills every mana bar.',
+        'Cleaner page: one list with no stages, no Solo ranking, no pet box and no Survives or Dies label. Auto Potion is free for everyone, so every hero lasts AFK.',
+        'New What this list assumes card: the full setup, plus what Party and Party + Supporter add.',
+      ]],
+      ['Whole wiki', [
+        'Updated to map 1.2.3.',
+        'New patch day tools: the next map update reaches the wiki faster.',
+      ]],
+    ]],
     ['19 Oct 2026', [
       ['Monsters and items', [
         'Wiki updated for the new map patch. Three new Primordial areas: Emerald Dream, Nozran and Noxstella, each with three field bosses. New raids: Ysera, Nozdormu and Galakrond.',
